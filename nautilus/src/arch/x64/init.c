@@ -234,7 +234,7 @@ init (unsigned long mbd,
     
     detect_cpu();
 
-    serial_puts("Here");
+    serial_puts("Testing... \n 1. \n 2. \n 3. \n");
 
     /* setup the temporary boot-time allocator */
     mm_boot_init(mbd);
