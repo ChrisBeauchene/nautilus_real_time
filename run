@@ -3,6 +3,3 @@ cd nautilus
 make isoimage
 qemu-system-x86_64 -m 2048 -serial stdio -cdrom nautilus.iso
 cd ..
-git add .
-git commit -m "Testing"
-git push origin master
