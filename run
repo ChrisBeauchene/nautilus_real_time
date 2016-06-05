@@ -1,0 +1,4 @@
+git pull origin master
+cd nautilus
+make isoimage
+qemu-system-x86_64 -m 2048 -serial stdio -cdrom nautilus.iso
