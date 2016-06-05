@@ -6,3 +6,4 @@ cd ..
 git add .
 git commit -m "Testing"
 git push origin master
+Memorex:1234
