@@ -1,0 +1,7 @@
+git remote remove origin
+git remote add origin https://chrisbeauchene@github.com/chrisbeauchene/nautilus_real_time
+git add .
+git commit -m "Working Version"
+git push origin master
+git remote remove origin
+git remote add origin https://chrisbeauchene@github.com/chrisbeauchene/nautilus_rt
