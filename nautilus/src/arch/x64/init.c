@@ -334,7 +334,5 @@ init (unsigned long mbd,
 }
 
 static void test_apic_time() {
-    while (1) {
-        printk("duh");
-    }
+    while (1) {}
 }

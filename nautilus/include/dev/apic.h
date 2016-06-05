@@ -205,6 +205,7 @@ apic_write (struct apic_dev * apic,
             uint_t reg, 
             uint32_t val)
 {
+    printk("Writing to APIC.\n");
     *((volatile uint32_t *)(apic->base_addr + reg)) = val;
 }
 
