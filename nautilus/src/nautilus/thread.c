@@ -54,6 +54,7 @@ extern addr_t boot_stack_start;
 extern void nk_thread_switch(nk_thread_t*);
 extern void nk_thread_entry(void *);
 static struct nk_tls tls_keys[TLS_MAX_KEYS];
+static uint64_t current_time();
 
 
 /****** SEE BELOW FOR EXTERNAL THREAD INTERFACE ********/
@@ -1293,9 +1294,10 @@ __thread_fork (void)
 nk_thread_t*
 nk_need_resched (void) 
 {
+    SCHED_DEBUG("Starting scheduler debug with timestamp %llu\n", current_time());
     nk_thread_t * p;
     nk_thread_t * c;
-
+    
     ASSERT(!irqs_enabled());
 
     c = get_cur_thread();
@@ -1590,6 +1592,14 @@ nk_tls_test (void)
 {
     nk_thread_start(tls_dummy, NULL, NULL, 1, TSTACK_DEFAULT, NULL, 1);
 }
+ 
+
+static uint64_t current_time() {
+    uint64_t hi, lo;
+    __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
+    return ((hi << 32) | lo);
+}
+                
 
 
 
