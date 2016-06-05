@@ -325,7 +325,7 @@ init (unsigned long mbd,
     start_shell();
 
     runtime_init();
-
+    
     test_apic_time();
     printk("Nautilus boot thread yielding (indefinitely)\n");
     
@@ -334,5 +334,7 @@ init (unsigned long mbd,
 }
 
 static void test_apic_time() {
-    while (1);
+    while (1) {
+        printk("duh");
+    }
 }
