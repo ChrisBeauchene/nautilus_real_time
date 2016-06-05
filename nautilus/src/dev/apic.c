@@ -410,8 +410,8 @@ apic_timer_setup (struct apic_dev * apic, uint32_t quantum)
     apic_write(apic, APIC_REG_LVTT, APIC_TIMER_DISABLE);
 
     /* TODO need to fixup when frequency is way off */
-    //busfreq = APIC_TIMER_DIV * NAUT_CONFIG_HZ*(0xffffffff - apic_read(apic, APIC_REG_TMCCT) + 1);
-    busfreq = 1100000000;
+    busfreq = APIC_TIMER_DIV * NAUT_CONFIG_HZ*(0xffffffff - apic_read(apic, APIC_REG_TMCCT) + 1);
+    // busfreq = 1100000000;
     APIC_DEBUG("Detected APIC 0x%x bus frequency as %u.%u MHz\n", apic->id, busfreq/1000000, busfreq%1000000);
     tmp = busfreq/(1000/quantum)/APIC_TIMER_DIV;
     APIC_DEBUG("Setting APIC timer Initial Count Reg to %u\n", tmp);
