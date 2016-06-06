@@ -101,7 +101,7 @@ rt_thread* rt_thread_init(int type,
     t->constraints = constraints;
     t->start_time = 0;
     t->run_time = 0;
-    rt_thread->deadline = 0;
+    t->deadline = 0;
 
     if (type == PERIODIC)
     {
