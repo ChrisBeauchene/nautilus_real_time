@@ -551,20 +551,6 @@ struct nk_thread *rt_need_resched()
             set_timer(scheduler, rt_c);
             return rt_c->thread;
             break;
-        case SCHEDULER:
-            if (scheduler->runnable->size > 0) {
-                rt_n = dequeue_thread(scheduler->runnable);
-                update_enter(rt_n);
-                set_timer(scheduler, rt_n);
-                return rt_n->thread;
-            }
-            if (scheduler->aperiodic->size > 0) {
-                rt_n = dequeue_thread(scheduler->aperiodic);
-                update_enter(rt_n);
-                set_timer(scheduler, rt_n);
-                return rt_n->thread;
-            }
-            
         default:
             set_timer(scheduler, rt_c);
             return c;
