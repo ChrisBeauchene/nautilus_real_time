@@ -908,7 +908,8 @@ int nk_switch_to_vc_list()
 static int start_list()
 {
 
-  nk_thread_start(list, 0, 0, 0, PAGE_SIZE, &list_tid, -1);
+  // nk_thread_start(list, 0, 0, 0, PAGE_SIZE, &list_tid, -1);
+
   
   INFO("List launched\n");
 
