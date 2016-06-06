@@ -511,13 +511,13 @@ struct nk_thread *rt_need_resched()
 
 static inline void update_exit(rt_thread *t)
 {
-    printk("exiting thread %d\n", t->thread->tid);
+    // printk("exiting thread %d\n", t->thread->tid);
     t->run_time += (t->exit_time - t->start_time);
 }
 
 static inline void update_enter(rt_thread *t)
 {
-    printk("Entering thread %d\n", t->thread->tid);
+    // printk("Entering thread %d\n", t->thread->tid);
     t->start_time = cur_time();
 }
 
@@ -546,12 +546,6 @@ uint64_t cur_time()
     return rdtsc();
 }
 
-/* static inline uint64_t rdtsc()
- {
- uint64_t ret;
- __asm__ volatile ( "rdtsc" : "=A"(ret) );
- return ret;
- }*/
 
 int rt_admit(rt_scheduler *scheduler, rt_thread *thread)
 {
