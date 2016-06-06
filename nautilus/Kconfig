@@ -213,6 +213,13 @@ menu "AeroKernel Performance Optimizations"
             Enables idle threads to start in addition to the main boot threads. 
             Usually not needed.
 
+    config USE_RT_SCHEDULER
+    bool "Use real-time scheduler."
+    default n
+    help
+        Enables the use of the real-time scheduler.
+        Disables apic periodic timer and uses a oneshot timer to call the scheduler at various intervals.
+
 
 endmenu
     
@@ -332,6 +339,27 @@ menu Debugging
       help
         Turn on debug prints for the scheduler/threads
 
+    config RT_DEBUG
+    bool "Enable real-time debugging"
+    depends on USE_RT_SCHEDULER
+    default n
+    help
+        Compiles the Nautilus kernl with real-time debugging prints
+
+    config DEBUG_RT_SCHEDULER
+    bool "Debug Real-Time Scheduler"
+    depends on RT_DEBUG
+    default n
+    help
+        Turn on debug prints for real-time scheduler code
+
+    config DEBUG_RT_THREADS
+    bool "Debug Real-Time Threads"
+    depends on RT_DEBUG
+    default n
+    help
+        Turn on debug prints for real-time thread code
+
     config DEBUG_SYNCH
       bool "Debug Synchronization"
       depends on DEBUG_PRINTS
@@ -430,4 +458,6 @@ endmenu
 
 
 source "src/dev/Kconfig"
+
+
 
