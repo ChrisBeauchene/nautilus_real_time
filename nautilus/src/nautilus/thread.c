@@ -1359,7 +1359,7 @@ __thread_fork (void)
         return 0;
     }
     rt_thread *rt_parent = me->rt_thread;
-    rt_thread *rt = rt_thread_init(rt_parent->type, rrt->parent->constraints, rt_parent->rt_deadline, tid);
+    rt_thread *rt = rt_thread_init(rt_parent->type, rt_parent->constraints, rt_parent->rt_deadline, tid);
     struct sys_info *sys = per_cpu_get(system);
     if (sys->cpus[cpu]->rt_sched)
     {
