@@ -43,6 +43,11 @@
 #define APIC_PRINT(fmt, args...) INFO_PRINT("APIC: " fmt, ##args)
 #define APIC_WARN(fmt, args...)  WARN_PRINT("APIC: " fmt, ##args)
 
+static inline uint64_t rdtsc();
+static inline apic_tsc* init_apic_tsc();
+static inline void info_dump(apic_tsc *info);
+static inline apic_loop(struct apic_dev *apic, apic_tsc *info);
+
 
 static const char * apic_err_codes[8] = {
     "[Send Checksum Error]",
@@ -411,6 +416,7 @@ apic_timer_setup (struct apic_dev * apic, uint32_t quantum)
 
     /* TODO need to fixup when frequency is way off */
     busfreq = APIC_TIMER_DIV * NAUT_CONFIG_HZ * (0xffffffff - apic_read(apic, APIC_REG_TMCCT) + 1);
+    apic->frequency = busfreq;
     // busfreq = 1100000000;
     APIC_DEBUG("Detected APIC 0x%x bus frequency as %u.%u MHz\n", apic->id, busfreq / 1000000, busfreq % 1000000);
     tmp = busfreq/(1000/quantum)/APIC_TIMER_DIV;
@@ -795,3 +801,55 @@ apic_init (struct cpu * core)
     apic_dump(apic);
 }
 
+inline void apic_oneshot_write(struct apic_dev *apic, uint64_t time) {
+    
+}
+
+typedef struct apic_tsc {
+    uint64_t tsc_diff;
+    uint64_t apic_diff;
+    uint64_t num_trials;
+    uint64_t avg;
+} apic_tsc;
+
+static inline apic_tsc* init_apic_tsc() {
+    apic_tsc *info = (apic_tsc *)malloc(sizeof(apic_tsc));
+    info->tsc_diff = 0;
+    info-> apic_diff = 0;
+    info->num_trials = 0;
+    info->avg = 0;
+    return info;
+}
+
+static inline void info_dump(apic_tsc *info) {
+    APIC_DEBUG("TSC difference: %llu\n", info->tsc_diff);
+    APIC_DEBUG("APIC difference: %llu\n", info->apic_diff);
+    APIC_DEBUG("Trials difference: %llu\n", info->num_trials);
+}
+
+void calibrate_apic(struct apic_dev *apic) {
+    apic_tsc *info = init_apic_tsc();
+    while (1) {
+        apic_loop(apic, info);
+        info_dump(info);
+    }
+}
+
+static inline apic_loop(struct apic_dev *apic, apic_tsc *info) {
+    apic_write(apic, APIC_REG_LVTT, APIC_TIMER_ONESHOT | APIC_DEL_MODE_FIXED | APIC_TIMER_INT_VEC);
+    apic_write(apic, APIC_REG_TMDCR, APIC_TIMER_DIVCODE);
+    apic_write(apic, APIC_REG_TMICT, 0xffffffff);
+    uint64_t start = rdtsc();
+    udelay(100000);
+    apic_write(apic, APIC_REG_LVTT, APIC_TIMER_DISABLE);
+    uint64_t end = rdtsc();
+    info->tsc_diff = (end - start);
+    info->apic_diff = 0xffffffff - apic_read(apic, APIC_REG_TMCCT) + 1);
+    info->num_trials++;
+}
+
+static inline uint64_t rdtsc() {
+    uint64_t hi, lo;
+    __asm__ __volatile ("rdtsc" : "=a"(lo), "=d"(hi))
+    return ((hi << 32) | lo);
+}

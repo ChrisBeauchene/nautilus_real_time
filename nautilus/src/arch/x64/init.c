@@ -326,7 +326,7 @@ init (unsigned long mbd,
 
     runtime_init();
     
-    test_apic_time();
+    calibrate_apic(naut->sys.cpus[0]->apic);
     printk("Nautilus boot thread yielding (indefinitely)\n");
     
     /* we don't come back from this */

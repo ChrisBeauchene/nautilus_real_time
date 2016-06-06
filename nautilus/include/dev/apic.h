@@ -196,6 +196,7 @@ struct apic_dev {
     uint_t   id;
     uint64_t spur_int_cnt;
     uint64_t err_int_cnt;
+    uint64_t frequency;
 };
 
 
@@ -205,9 +206,12 @@ apic_write (struct apic_dev * apic,
             uint_t reg, 
             uint32_t val)
 {
-    printk("Writing time %d APIC.\n", val);
     *((volatile uint32_t *)(apic->base_addr + reg)) = val;
 }
+    
+inline void apic_oneshot_write(struct apic_dev *apic, uint64_t time);
+
+void calibrate_apic(struct apic_dev *apic);
 
 
 static inline uint32_t
