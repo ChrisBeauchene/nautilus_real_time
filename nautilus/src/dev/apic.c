@@ -839,6 +839,7 @@ void calibrate_apic(struct apic_dev *apic) {
     apic_tsc *info = init_apic_tsc();
      {
         const int num_tests = 100;
+         int i = 0;
          for (i = 0; i < num_tests; i++) {
              apic_loop(apic, info);
              info_dump(info);
