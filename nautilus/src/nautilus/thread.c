@@ -137,9 +137,7 @@ static inline void
 enqueue_thread_on_waitq (nk_thread_t * waiter, nk_thread_queue_t * waitq)
 {
     ASSERT(waiter->status != NK_THR_WAITING);
-    
     waiter->status = NK_THR_WAITING;
-    
     nk_enqueue_entry_atomic(waitq, &(waiter->wait_node));
 }
 
@@ -633,28 +631,19 @@ nk_thread_start (nk_thread_fun_t fun,
     }
     
     thread_setup_init_stack(newthread, fun, input);
+
 #ifdef NAUT_CONFIG_USE_RT_SCHEDULER
     rt_thread *rt = rt_thread_init(rt_type, rt_constraints, rt_deadline, newthread);
-    RT_THREAD_DEBUG("rt_deadline is %llu\n", rt->deadline);
     struct sys_info *sys = per_cpu_get(system);
     if (sys->cpus[cpu]->rt_sched)
     {
-        if (rt_admit(sys->cpus[cpu]->rt_sched, rt))
-        {
-            if (rt_type == PERIODIC || rt_type == SPORADIC)
-            {
-                enqueue_thread(sys->cpus[cpu]->rt_sched->runnable, rt);
-                RT_THREAD_DEBUG("THREAD DEADLINE ON RUN QUEUE IS: %llu\n", sys->cpus[cpu]->rt_sched->runnable->threads[0]->deadline);
-            }
-            else
-            {
-                enqueue_thread(sys->cpus[cpu]->rt_sched->aperiodic, rt);
-            }
-        } else
-        {
-            RT_THREAD_DEBUG("FAILED TO START THREAD. ADMISSION CONTROL DENYING ENTRY.\n");
+        if (rt_type == APERIODIC) {
+            enqueue_thread(sys->cpus[cpu]->rt_sched->aperiodic, rt);
+        } else {
+            enqueue_thread(sys->cpus[cpu]->rt_sched->arrival, rt);
         }
     }
+
     nk_schedule();
 #else
     nk_enqueue_thread_on_runq(newthread, cpu);
@@ -979,7 +968,14 @@ nk_yield (void)
 }
 #else
 {
-    nk_schedule();
+
+    // Dequeue aperiodic 
+        // Enqueue current queue
+    // Else if hard real-time
+        // Dequeue run queue
+        // enqueue current queue on arrival queue
+    // Switch to new queue
+    // nk_thread_switch()
 }
 #endif
 
@@ -1263,10 +1259,6 @@ nk_get_parent_tid (void)
 
 /********** END EXTERNAL INTERFACE **************/
 
-
-
-
-
 // push the child stack down by this much just in case
 // we only have one caller frame to mangle
 // the launcher function needs to put a new return address
@@ -1358,6 +1350,12 @@ __thread_fork (void)
     
     // put it on the run queue
 #ifdef NAUT_CONFIG_USE_RT_SCHEDULER
+    rt_thread *rt = rt_thread_init(rt_type, rt_constraints, rt_deadline, tid);
+    struct sys_info *sys = per_cpu_get(system);
+    if (sys->cpus[cpu]->rt_sched)
+    {
+        enqueue_thread(sys->cpus[cpu]->rt_sched->arrival, rt);
+    }
 #endif
     nk_enqueue_thread_on_runq(t, t->bound_cpu);
     

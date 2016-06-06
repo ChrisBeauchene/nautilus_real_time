@@ -177,7 +177,7 @@ void enqueue_thread(rt_queue *queue, rt_thread *thread)
             queue->threads[pos] = queue->threads[parent(pos)];
             pos = parent(pos);
         }
-        thread->status = RUNNABLE_QUEUE;
+        thread->q_type = RUNNABLE_QUEUE;
         queue->threads[pos] = thread;
         
     } else if (queue->type == PENDING_QUEUE)
@@ -481,7 +481,7 @@ struct nk_thread *rt_need_resched()
             enqueue_thread(scheduler->aperiodic, rt_c);
             rt_n = dequeue_thread(scheduler->aperiodic);
             set_timer(scheduler, rt_n);
-            return rt_n;
+            return rt_n->thread;
             break;
             
         case SPORADIC:

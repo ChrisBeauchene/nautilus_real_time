@@ -76,7 +76,6 @@ typedef struct tsc_info {
     uint64_t start_time;
     uint64_t end_time;
     uint64_t elapsed_time;
-    
     uint64_t error;
 } tsc_info;
 
