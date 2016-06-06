@@ -702,6 +702,10 @@ static void test_real_time(void *in)
     }
 }
 
+static int sched_sim(rt_scheduler *scheduler) {
+    
+}
+
 
 
 void nk_rt_test()
@@ -748,11 +752,9 @@ void nk_rt_test()
     rt_constraints *constraints_eighth = (rt_constraints *)malloc(sizeof(rt_constraints));
     struct periodic_constraints per_constr_eighth = {(500000000000), (500000000), 0, 40};
     constraints_eighth->periodic = per_constr_eighth;
-    
-    printk("ABOUT TO START TEST.\n");
+
     uint64_t first = 1, second = 2, third = 3, fourth = 4, five = 5, six = 6, seven = 7, eight = 8;
     nk_thread_start((nk_thread_fun_t)test_real_time, (void *)first, NULL, 0, 0, &r, my_cpu_id(), PERIODIC, constraints_first, 0);
-    printk("Starting the second thread.\n");
     nk_thread_start((nk_thread_fun_t)test_real_time, (void *)second, NULL, 0, 0, &s, my_cpu_id(), PERIODIC, constraints_second, 0);
     nk_thread_start((nk_thread_fun_t)test_real_time, (void *)third, NULL, 0, 0, &t, my_cpu_id(), PERIODIC, constraints_third, 0);
     nk_thread_start((nk_thread_fun_t)test_real_time, (void *)five, NULL, 0, 0, &v, my_cpu_id(), PERIODIC, constraints_fifth, 0);
@@ -760,14 +762,7 @@ void nk_rt_test()
     nk_thread_start((nk_thread_fun_t)test_real_time, (void *)seven, NULL, 0, 0, &x, my_cpu_id(), PERIODIC, constraints_seven, 0);
     nk_thread_start((nk_thread_fun_t)test_real_time, (void *)fourth, NULL, 0, 0, &u, my_cpu_id(), APERIODIC, constraints_fourth, 0);
     nk_thread_start((nk_thread_fun_t)test_real_time, (void *)eight, NULL, 0, 0, &y, my_cpu_id(), PERIODIC, constraints_eighth, 0);	
-    nk_join(r, NULL);
-    nk_join(s, NULL);
-    nk_join(t, NULL);	
-    nk_join(u, NULL);
-    nk_join(v, NULL);
-    nk_join(w, NULL);
-    nk_join(x, NULL);
-    nk_join(y, NULL);
+
     
     
     
