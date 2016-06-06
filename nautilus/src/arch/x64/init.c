@@ -329,16 +329,16 @@ init (unsigned long mbd,
     nk_rt_test();
 #endif
     
-    nk_vc_init();
+    // nk_vc_init();
 
-    start_shell();
+    // start_shell();
 
-    runtime_init();
+    // runtime_init();
     
     
-    printk("Nautilus boot thread yielding (indefinitely)\n");
+    // printk("Nautilus boot thread yielding (indefinitely)\n");
     
-    /* we don't come back from this */
-    idle(NULL, NULL);
+    // /* we don't come back from this */
+    // idle(NULL, NULL);
 }
 
