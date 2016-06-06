@@ -65,7 +65,6 @@
 
 
 extern spinlock_t printk_lock;
-static void test_apic_time();
 
 #ifdef NAUT_CONFIG_NDPC_RT
 void ndpc_rt_test()
@@ -319,20 +318,18 @@ init (unsigned long mbd,
 
     /* interrupts on */
     sti();
-
+    calibrate_apic(naut->sys.cpus[0]->apic);
+    
     nk_vc_init();
 
     start_shell();
 
     runtime_init();
     
-    calibrate_apic(naut->sys.cpus[0]->apic);
+    
     printk("Nautilus boot thread yielding (indefinitely)\n");
     
     /* we don't come back from this */
     idle(NULL, NULL);
 }
 
-static void test_apic_time() {
-    while (1) {}
-}
