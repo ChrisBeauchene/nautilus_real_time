@@ -752,7 +752,7 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
     rt_scheduler *scheduler = sys->cpus[my_cpu_id()]->rt_sched;
     
     rt_constraints *constraints_first = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints per_constr_first = {(10000000000), (10000000), 0, 40};
+    struct periodic_constraints per_constr_first = {sched_period, sched_slice_time, 0, 40};
     constraints_first->periodic = per_constr_first;
 
     nk_thread_start((nk_thread_fun_t)sched_sim, (void *)scheduler, NULL, 0, 0, &sched, my_cpu_id(), PERIODIC, constraints_first, 0);
@@ -760,6 +760,7 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
 
 static void sched_sim(void *scheduler) {
     printk("In scheduler\n");
+
 }
 
 
