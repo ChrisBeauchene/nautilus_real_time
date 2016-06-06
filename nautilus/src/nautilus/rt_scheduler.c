@@ -702,6 +702,8 @@ static void test_real_time(void *in)
     }
 }
 
+
+
 void nk_rt_test()
 {
     nk_thread_id_t r;
