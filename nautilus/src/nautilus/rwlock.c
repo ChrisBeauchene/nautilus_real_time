@@ -177,21 +177,21 @@ writer (void * in, void ** out)
 }
 
 
-void
-nk_rwlock_test (void) 
-{
-    nk_rwlock_t * rl = NULL;
-    rl = malloc(sizeof(nk_rwlock_t));
-    if (!rl) {
-        ERROR_PRINT("Could not allocate rwlock\n");
-        return;
-    }
-
-    nk_rwlock_init(rl);
-
-    nk_thread_start(reader1, rl, NULL, 1, TSTACK_DEFAULT, NULL, 1);
-    nk_thread_start(reader2, rl, NULL, 1, TSTACK_DEFAULT, NULL, 2);
-    nk_thread_start(writer, rl, NULL, 1, TSTACK_DEFAULT, NULL, 3);
-
-}
+//void
+//nk_rwlock_test (void) 
+//{
+//    nk_rwlock_t * rl = NULL;
+//    rl = malloc(sizeof(nk_rwlock_t));
+//    if (!rl) {
+//        ERROR_PRINT("Could not allocate rwlock\n");
+//        return;
+//    }
+//
+//    nk_rwlock_init(rl);
+//
+//    nk_thread_start(reader1, rl, NULL, 1, TSTACK_DEFAULT, NULL, 1);
+//    nk_thread_start(reader2, rl, NULL, 1, TSTACK_DEFAULT, NULL, 2);
+//    nk_thread_start(writer, rl, NULL, 1, TSTACK_DEFAULT, NULL, 3);
+//
+//}
 
