@@ -50,10 +50,10 @@ typedef struct apic_tsc {
     uint64_t avg;
 } apic_tsc;
 
-static inline uint64_t rdtsc();
+static inline uint64_t get_tsc();
 static inline apic_tsc* init_apic_tsc();
 static inline void info_dump(apic_tsc *info);
-static inline apic_loop(struct apic_dev *apic, apic_tsc *info);
+static inline void apic_loop(struct apic_dev *apic, apic_tsc *info)
 
 
 static const char * apic_err_codes[8] = {
@@ -836,21 +836,21 @@ void calibrate_apic(struct apic_dev *apic) {
     }
 }
 
-static inline apic_loop(struct apic_dev *apic, apic_tsc *info) {
+static inline void apic_loop(struct apic_dev *apic, apic_tsc *info) {
     apic_write(apic, APIC_REG_LVTT, APIC_TIMER_ONESHOT | APIC_DEL_MODE_FIXED | APIC_TIMER_INT_VEC);
     apic_write(apic, APIC_REG_TMDCR, APIC_TIMER_DIVCODE);
     apic_write(apic, APIC_REG_TMICT, 0xffffffff);
-    uint64_t start = rdtsc();
+    uint64_t start = get_tsc();
     udelay(100000);
     apic_write(apic, APIC_REG_LVTT, APIC_TIMER_DISABLE);
-    uint64_t end = rdtsc();
+    uint64_t end = get_tsc();
     info->tsc_diff = (end - start);
     info->apic_diff = (0xffffffff - apic_read(apic, APIC_REG_TMCCT) + 1);
     info->num_trials++;
 }
 
-static inline uint64_t rdtsc() {
+static inline uint64_t get_tsc() {
     uint64_t hi, lo;
-    __asm__ __volatile ("rdtsc" : "=a"(lo), "=d"(hi))
+    __asm__ __volatile ("rdtsc" : "=a"(lo), "=d"(hi));
     return ((hi << 32) | lo);
 }
