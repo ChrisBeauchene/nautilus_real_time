@@ -1294,7 +1294,6 @@ __thread_fork (void)
 nk_thread_t*
 nk_need_resched (void) 
 {
-    SCHED_DEBUG("Starting scheduler debug with timestamp %llu\n", current_time());
     nk_thread_t * p;
     nk_thread_t * c;
     
@@ -1599,6 +1598,12 @@ static uint64_t current_time() {
     __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
     return ((hi << 32) | lo);
 }
+
+// real time scheduler
+
+// Ready queue - Admitted / Ready hard-time threads
+// Waiting queue - Admitted hard-time threads waiting to run
+// 
                 
 
 
