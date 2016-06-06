@@ -73,6 +73,7 @@
 		1209003F1D03E230005ECFDD /* test_legion.c in Sources */ = {isa = PBXBuildFile; fileRef = 1209FF821D03E230005ECFDD /* test_legion.c */; };
 		120900401D03E230005ECFDD /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = 1209FF881D03E230005ECFDD /* Makefile */; };
 		120900411D03E230005ECFDD /* phi_console.c in Sources */ = {isa = PBXBuildFile; fileRef = 1209FF891D03E230005ECFDD /* phi_console.c */; };
+		120900441D0536BA005ECFDD /* rt_scheduler.c in Sources */ = {isa = PBXBuildFile; fileRef = 120900421D0536BA005ECFDD /* rt_scheduler.c */; };
 		1209FD8C1D03E1B2005ECFDD /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 1209FD8B1D03E1B2005ECFDD /* main.c */; };
 		1209FF8C1D03E230005ECFDD /* .kconfig.d in Sources */ = {isa = PBXBuildFile; fileRef = 1209FD941D03E22F005ECFDD /* .kconfig.d */; };
 		1209FF8D1D03E230005ECFDD /* bitmap.c in Sources */ = {isa = PBXBuildFile; fileRef = 1209FE461D03E230005ECFDD /* bitmap.c */; };
@@ -205,6 +206,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		120900421D0536BA005ECFDD /* rt_scheduler.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rt_scheduler.c; sourceTree = "<group>"; };
+		120900431D0536BA005ECFDD /* rt_scheduler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = rt_scheduler.h; path = ../../src/nautilus/rt_scheduler.h; sourceTree = "<group>"; };
 		1209FD881D03E1B2005ECFDD /* nautilus_rt */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = nautilus_rt; sourceTree = BUILT_PRODUCTS_DIR; };
 		1209FD8B1D03E1B2005ECFDD /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		1209FD931D03E22F005ECFDD /* .gitignore */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
@@ -1158,6 +1161,7 @@
 				1209FE351D03E230005ECFDD /* queue.h */,
 				1209FE361D03E230005ECFDD /* random.h */,
 				1209FE371D03E230005ECFDD /* rbtree.h */,
+				120900431D0536BA005ECFDD /* rt_scheduler.h */,
 				1209FE381D03E230005ECFDD /* rwlock.h */,
 				1209FE391D03E230005ECFDD /* sfi.h */,
 				1209FE3A1D03E230005ECFDD /* shutdown.h */,
@@ -1594,6 +1598,7 @@
 				1209FF411D03E230005ECFDD /* paging.c */,
 				1209FF421D03E230005ECFDD /* pmc.c */,
 				1209FF431D03E230005ECFDD /* printk.c */,
+				120900421D0536BA005ECFDD /* rt_scheduler.c */,
 				1209FF441D03E230005ECFDD /* queue.c */,
 				1209FF451D03E230005ECFDD /* random.c */,
 				1209FF461D03E230005ECFDD /* rbtree.c */,
@@ -1867,6 +1872,7 @@
 				1209FFAB1D03E230005ECFDD /* symbol.c in Sources */,
 				1209FFDC1D03E230005ECFDD /* shutdown.c in Sources */,
 				1209FFCF1D03E230005ECFDD /* numa.c in Sources */,
+				120900441D0536BA005ECFDD /* rt_scheduler.c in Sources */,
 				1209003F1D03E230005ECFDD /* test_legion.c in Sources */,
 				120900071D03E230005ECFDD /* condvar.c in Sources */,
 				1209FFFB1D03E230005ECFDD /* lowlevel_dma.cc in Sources */,
