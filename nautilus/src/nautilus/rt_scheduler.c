@@ -695,8 +695,21 @@ static void test_real_time(void *in)
     }
 }
 
-static int sched_sim(rt_scheduler *scheduler) {
+void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
+    nk_thread_id_t sched;
+
+    struct sys_info *sys = per_cpu_get(system);
+    rt_scheduler *scheduler = sys->cpus[my_cpu_id()]->rt_sched;
     
+    rt_constraints *constraints_first = (rt_constraints *)malloc(sizeof(rt_constraints));
+    struct periodic_constraints per_constr_first = {(10000000000), (10000000), 0, 40};
+    constraints_first->periodic = per_constr_first;
+
+    nk_thread_start((nk_thread_fun_t)sched_sim, (void *)scheduler, NULL, 0, 0, &sched, my_cpu_id(), PERIODIC, constraints_first, 0);
+}
+
+static int sched_sim(void *scheduler) {
+    printk("In scheduler\n");
 }
 
 
