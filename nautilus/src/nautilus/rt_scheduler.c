@@ -65,7 +65,7 @@
 #define APERIODIC_QUEUE 2
 #define MAX_QUEUE 256
 
-#define QUANTUM 10000000000
+#define QUANTUM 1000000
 
 static void set_timer(rt_scheduler *scheduler, rt_thread *thread);
 
@@ -557,7 +557,7 @@ int rt_admit(rt_scheduler *scheduler, rt_thread *thread)
 {
     if (thread->type == PERIODIC)
     {
-        uint64_t min_period = (get_min_per(scheduler->runnable, scheduler->pending, thread) / 2.0);
+        uint64_t min_period = (get_min_per(scheduler->runnable, scheduler->pending, thread) / 2);
         uint64_t sched_util= (scheduler->run_time * 100000) / min_period;
         uint64_t per_util = get_per_util(scheduler->runnable, scheduler->pending) + sched_util;
         printk("UTIL FACTOR =  \t%llu\n", per_util);
@@ -586,8 +586,7 @@ int rt_admit(rt_scheduler *scheduler, rt_thread *thread)
             return 0;
         }
     }
-    
-    RT_SCHED_DEBUG("Slice of thread is %f\n", (double)thread->constraints->periodic.slice);
+
     return 1;
 }
 
