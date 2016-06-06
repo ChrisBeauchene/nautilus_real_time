@@ -117,6 +117,7 @@ typedef struct rt_scheduler {
 
 rt_scheduler* rt_scheduler_init(rt_thread *main_thread);
 struct nk_thread* rt_need_resched();
+void rt_start(uint64_t sched_slice_time, uint64_t sched_period);
 
 void enqueue_thread(rt_queue *queue, rt_thread *thread);
 rt_thread* dequeue_thread(rt_queue *queue);
