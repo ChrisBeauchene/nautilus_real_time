@@ -838,8 +838,11 @@ static inline void info_dump(apic_tsc *info) {
 void calibrate_apic(struct apic_dev *apic) {
     apic_tsc *info = init_apic_tsc();
      {
-        apic_loop(apic, info);
-        info_dump(info);
+        const int num_tests = 100;
+         for (i = 0; i < num_tests; i++) {
+             apic_loop(apic, info);
+             info_dump(info);
+         }
     }
 }
 
@@ -848,7 +851,8 @@ static inline void apic_loop(struct apic_dev *apic, apic_tsc *info) {
     apic_write(apic, APIC_REG_TMDCR, APIC_TIMER_DIVCODE);
     apic_write(apic, APIC_REG_TMICT, 0xffffffff);
     uint64_t start = get_tsc();
-    udelay(100000);
+    const int max_time = 1000000;
+    udelay(start % 1000000);
     apic_write(apic, APIC_REG_LVTT, APIC_TIMER_DISABLE);
     uint64_t end = get_tsc();
     info->tsc_diff = (end - start);
