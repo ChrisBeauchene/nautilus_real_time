@@ -331,7 +331,6 @@ void rt_thread_dump(rt_thread *thread)
 
 static void set_timer(rt_scheduler *scheduler, rt_thread *current_thread)
 {
-    printk("Setting timer.\n");
     scheduler->tsc->start_time = cur_time();
     struct sys_info *sys = per_cpu_get(system);
     struct apic_dev *apic = sys->cpus[my_cpu_id()]->apic;
