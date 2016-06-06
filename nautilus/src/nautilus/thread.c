@@ -34,6 +34,10 @@
 #include <nautilus/errno.h>
 #include <nautilus/mm.h>
 
+#ifdef NAUT_CONFIG_USE_RT_SCHEDULER
+#include <nautilus/rt_scheduler.h>
+#endif
+
 
 extern uint8_t malloc_cpus_ready;
 
