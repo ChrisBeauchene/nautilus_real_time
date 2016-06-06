@@ -1,7 +1,7 @@
 /*
  * Automatically generated C config: don't edit
  * Nautilus version: 
- * Sun Jun  5 23:21:15 2016
+ * Mon Jun  6 00:04:44 2016
  */
 #define AUTOCONF_INCLUDED
 
@@ -42,6 +42,7 @@
 #undef NAUT_CONFIG_HALT_WHILE_IDLE
 #undef NAUT_CONFIG_THREAD_OPTIMIZE
 #undef NAUT_CONFIG_USE_IDLE_THREADS
+#define NAUT_CONFIG_USE_RT_SCHEDULER 1
 
 /*
  * Debugging
@@ -61,6 +62,9 @@
 #undef NAUT_CONFIG_DEBUG_SFI
 #undef NAUT_CONFIG_DEBUG_CXX
 #define NAUT_CONFIG_DEBUG_THREADS 1
+#define NAUT_CONFIG_RT_DEBUG 1
+#define NAUT_CONFIG_DEBUG_RT_SCHEDULER 1
+#define NAUT_CONFIG_DEBUG_RT_THREADS 1
 #undef NAUT_CONFIG_DEBUG_SYNCH
 #undef NAUT_CONFIG_DEBUG_BARRIER
 #undef NAUT_CONFIG_DEBUG_NUMA
