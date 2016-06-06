@@ -54,13 +54,13 @@ extern uint8_t malloc_cpus_ready;
 #define RT_SCHED_DEBUG(fmt, args...)
 #ifdef NAUT_CONFIG_DEBUG_RT_SCHEDULER
 #undef RT_SCHED_DEBUG
-#define RT_SCHED_DEBUG(fmt, args...) RT_DEBUG_PRINT("SCHED: " fmt, ##args)
+#define RT_SCHED_DEBUG(fmt, args...) printk("SCHED: " fmt, ##args)
 #endif
 
 #define RT_THREAD_DEBUG(fmt, args...)
 #ifdef NAUT_CONFIG_DEBUG_RT_THREADS
 #undef RT_THREAD_DEBUG
-#define RT_THREAD_DEBUG(fmt, args...) RT_DEBUG_PRINT("THREAD: " fmt, ##args)
+#define RT_THREAD_DEBUG(fmt, args...) printk("THREAD: " fmt, ##args)
 #endif
 
 static unsigned long next_tid = 0;
