@@ -26,26 +26,16 @@
  ******************************************************************/
 
 struct periodic_constraints {
-    uint64_t period, slice, phase;  //phase = time of first arrival
-    uint64_t slack;
+    uint64_t period, slice;
 };
 
 struct sporadic_constraints {
-    // arrived at time current_arrival;
-    // do work seconds of work before deadline
     uint64_t work;
-    uint64_t slack;
 };
 
 struct aperiodic_constraints {
-    // priority within the aperiodic class
     uint64_t priority;
 };
-
-typedef struct ratio {
-    uint64_t numerator;
-    uint64_t denominator;
-} ratio;
 
 typedef union rt_constraints {
     struct periodic_constraints     periodic;
@@ -53,13 +43,18 @@ typedef union rt_constraints {
     struct aperiodic_constraints    aperiodic;
 } rt_constraints;
 
+typedef enum { APERIODIC = 0, SPORADIC = 1, PERIODIC = 2} rt_type;
+typedef enum {RUNNABLE_QUEUE = 0, PENDING_QUEUE = 1, APERIODIC_QUEUE = 2, ARRIVAL_QUEUE = 3, WAITING_QUEUE = 4} queue_type;
+typedef enum { ARRIVED = 0, ADMITTED = 1, WAITING = 2} rt_status;
+
 typedef struct rt_thread {
-    enum { APERIODIC = 0, SPORADIC = 1, PERIODIC = 2, SCHEDULER = 3} type;
-    enum { CREATED = 0, ADMITTED = 1, RUNNING = 2} status;
+    rt_type type;
+    queue_type q_type;
+    rt_status status;
     rt_constraints *constraints;
-    uint64_t start_time; // when we last started this thread
-    uint64_t run_time;   // how  long it's been running in its current period
-    uint64_t deadline;   // deadline for current period
+    uint64_t start_time; 
+    uint64_t run_time;
+    uint64_t deadline;
     uint64_t exit_time;
     struct nk_thread *thread;
 } rt_thread;
@@ -70,19 +65,9 @@ rt_thread* rt_thread_init(int type,
                           struct nk_thread *thread
                           );
 
-
-/******************************************************************
- REAL TIME SCHEDULER
- CONTAINS THREE QUEUES
- - RUN QUEUE
- - PENDING QUEUE
- - APERIODIC QUEUE
- ******************************************************************/
-typedef enum {RUNNABLE_QUEUE = 0, PENDING_QUEUE = 1, APERIODIC_QUEUE = 2} queue_type;
-
 typedef struct rt_queue {
     queue_type type;
-    uint64_t size;
+    uint64_t size, head, tail;
     rt_thread *threads[0];
 } rt_queue ;
 
@@ -96,20 +81,11 @@ typedef struct tsc_info {
 } tsc_info;
 
 typedef struct rt_scheduler {
-    
-    // RUN QUEUE
-    // The queue of runnable threads
-    // Priority min queue
     rt_queue *runnable;
-    
-    // PENDING QUEUE
-    // The queue of threads waiting for their arrival time
     rt_queue *pending;
-    
-    // APERIODIC QUEUE
-    // The queue of threads that are aperiodic (least important)
     rt_queue *aperiodic;
-    
+    rt_queue *arrival;
+    rt_queue *waiting;
     rt_thread *main_thread;
     uint64_t run_time;
     tsc_info *tsc;
