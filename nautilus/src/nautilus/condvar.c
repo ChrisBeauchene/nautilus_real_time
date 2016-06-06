@@ -238,22 +238,22 @@ test3 (void * in, void ** out)
 }
 
 
-void 
-nk_condvar_test (void)
-{
-
-    nk_condvar_t * c = malloc(sizeof(nk_condvar_t));
-    if (!c) {
-        ERROR_PRINT("Could not allocate condvar\n");
-        return;
-    }
-
-    nk_condvar_init(c);
-
-    nk_thread_start(test1, c, NULL, 1, TSTACK_DEFAULT, NULL, 1);
-    nk_thread_start(test2, c, NULL, 1, TSTACK_DEFAULT, NULL, 2);
-    nk_thread_start(test3, c, NULL, 1, TSTACK_DEFAULT, NULL, 3);
-
-}
+//void 
+//nk_condvar_test (void)
+//{
+//
+//    nk_condvar_t * c = malloc(sizeof(nk_condvar_t));
+//    if (!c) {
+//        ERROR_PRINT("Could not allocate condvar\n");
+//        return;
+//    }
+//
+//    nk_condvar_init(c);
+//
+//    nk_thread_start(test1, c, NULL, 1, TSTACK_DEFAULT, NULL, 1);
+//    nk_thread_start(test2, c, NULL, 1, TSTACK_DEFAULT, NULL, 2);
+//    nk_thread_start(test3, c, NULL, 1, TSTACK_DEFAULT, NULL, 3);
+//
+//}
 
 

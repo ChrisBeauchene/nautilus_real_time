@@ -375,23 +375,23 @@ barrier_func2 (void * in, void ** out)
  * the machine
  *
  */
-void nk_barrier_test(void)
-{
-    nk_barrier_t * b;
-    b = malloc(sizeof(nk_barrier_t));
-    if (!b) {
-        ERROR_PRINT("could not allocate barrier\n");
-        return;
-    }
-
-    nk_barrier_init(b, 3);
-    nk_thread_start(barrier_func1, b, NULL, 1, TSTACK_DEFAULT, NULL, 1);
-    nk_thread_start(barrier_func2, b, NULL, 1, TSTACK_DEFAULT, NULL, 2);
-
-    nk_barrier_wait(b);
-
-    printk("Barrier test successful\n");
-    nk_barrier_destroy(b);
-    free(b);
-}
+//void nk_barrier_test(void)
+//{
+//    nk_barrier_t * b;
+//    b = malloc(sizeof(nk_barrier_t));
+//    if (!b) {
+//        ERROR_PRINT("could not allocate barrier\n");
+//        return;
+//    }
+//
+//    nk_barrier_init(b, 3);
+//    nk_thread_start(barrier_func1, b, NULL, 1, TSTACK_DEFAULT, NULL, 1);
+//    nk_thread_start(barrier_func2, b, NULL, 1, TSTACK_DEFAULT, NULL, 2);
+//
+//    nk_barrier_wait(b);
+//
+//    printk("Barrier test successful\n");
+//    nk_barrier_destroy(b);
+//    free(b);
+//}
 
