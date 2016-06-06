@@ -207,7 +207,7 @@
 
 /* Begin PBXFileReference section */
 		120900421D0536BA005ECFDD /* rt_scheduler.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = rt_scheduler.c; sourceTree = "<group>"; };
-		120900431D0536BA005ECFDD /* rt_scheduler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = rt_scheduler.h; path = ../../src/nautilus/rt_scheduler.h; sourceTree = "<group>"; };
+		120900451D053AC9005ECFDD /* rt_scheduler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = rt_scheduler.h; sourceTree = "<group>"; };
 		1209FD881D03E1B2005ECFDD /* nautilus_rt */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = nautilus_rt; sourceTree = BUILT_PRODUCTS_DIR; };
 		1209FD8B1D03E1B2005ECFDD /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		1209FD931D03E22F005ECFDD /* .gitignore */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = .gitignore; sourceTree = "<group>"; };
@@ -1150,6 +1150,7 @@
 				1209FE2A1D03E230005ECFDD /* mwait.h */,
 				1209FE2B1D03E230005ECFDD /* naut_assert.h */,
 				1209FE2C1D03E230005ECFDD /* naut_string.h */,
+				120900451D053AC9005ECFDD /* rt_scheduler.h */,
 				1209FE2D1D03E230005ECFDD /* naut_types.h */,
 				1209FE2E1D03E230005ECFDD /* nautilus.h */,
 				1209FE2F1D03E230005ECFDD /* nemo.h */,
@@ -1161,7 +1162,6 @@
 				1209FE351D03E230005ECFDD /* queue.h */,
 				1209FE361D03E230005ECFDD /* random.h */,
 				1209FE371D03E230005ECFDD /* rbtree.h */,
-				120900431D0536BA005ECFDD /* rt_scheduler.h */,
 				1209FE381D03E230005ECFDD /* rwlock.h */,
 				1209FE391D03E230005ECFDD /* sfi.h */,
 				1209FE3A1D03E230005ECFDD /* shutdown.h */,
