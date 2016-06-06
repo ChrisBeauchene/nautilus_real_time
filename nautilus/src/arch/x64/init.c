@@ -207,7 +207,7 @@ int start_shell()
 {
   nk_thread_id_t tid;
 
-  nk_thread_start(shell, 0, 0, 0, PAGE_SIZE, &tid, -1);
+  // nk_thread_start(shell, 0, 0, 0, PAGE_SIZE, &tid, -1);
   
   printk("Shell launched\n");
 
