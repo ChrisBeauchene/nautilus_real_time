@@ -75,8 +75,6 @@ static inline void update_enter(rt_thread *t);
 static inline int check_deadlines(rt_thread *t);
 static inline void update_periodic(rt_thread *t);
 
-// Get time functions
-// static inline uint64_t rdtsc();
 
 // Admission Control Functions
 
@@ -89,6 +87,7 @@ static inline uint64_t umin(uint64_t x, uint64_t y);
 
 
 // SCHEDULE FUNCTIONS
+static int sched_sim(void *scheduler);
 
 rt_thread* rt_thread_init(int type,
                           rt_constraints *constraints,
