@@ -47,6 +47,7 @@ typedef struct apic_tsc {
     uint64_t tsc_diff;
     uint64_t apic_diff;
     uint64_t num_trials;
+    uint64_t sum_scale;
     uint64_t scale;
     uint64_t avg;
 } apic_tsc;
@@ -820,6 +821,7 @@ static inline apic_tsc* init_apic_tsc() {
     info-> apic_diff = 0;
     info->num_trials = 0;
     info->scale = 0;
+    info->sum_scale = 0;
     info->avg = 0;
     return info;
 }
@@ -835,7 +837,7 @@ static inline void info_dump(apic_tsc *info) {
 
 void calibrate_apic(struct apic_dev *apic) {
     apic_tsc *info = init_apic_tsc();
-    while (1) {
+     {
         apic_loop(apic, info);
         info_dump(info);
     }
@@ -852,8 +854,9 @@ static inline void apic_loop(struct apic_dev *apic, apic_tsc *info) {
     info->tsc_diff = (end - start);
     info->apic_diff = (0xffffffff - apic_read(apic, APIC_REG_TMCCT) + 1);
     info->scale = (info->tsc_diff / info->apic_diff);
+    info->sum_scale += info->scale;
     info->num_trials++;
-    info->avg = info->scale / info->num_trials;
+    info->avg = info->sum_scale / info->num_trials;
 }
 
 static inline uint64_t get_tsc() {
