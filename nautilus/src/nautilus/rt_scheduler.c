@@ -716,27 +716,27 @@ void nk_rt_test()
     
     
     rt_constraints *constraints_first = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints per_constr_first = {(100000000), (10000000), 0, 40};
+    struct periodic_constraints per_constr_first = {(100000000000), (10000000), 0, 40};
     constraints_first->periodic = per_constr_first;
     
     rt_constraints *constraints_second = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints per_constr_second = {(50000000), (5000000), 0, 40};
+    struct periodic_constraints per_constr_second = {(50000000000), (5000000), 0, 40};
     constraints_second->periodic = per_constr_second;
     
     rt_constraints *constraints_third = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints per_constr_third = {(2500000), (250000), 0, 40};
+    struct periodic_constraints per_constr_third = {(2500000000), (250000), 0, 40};
     constraints_third->periodic = per_constr_third;
     
     rt_constraints *constraints_fifth = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints per_constr_fifth = {(5000000), (5000000), 0, 40};
+    struct periodic_constraints per_constr_fifth = {(5000000000), (5000000), 0, 40};
     constraints_fifth->periodic = per_constr_fifth;
     
     rt_constraints *constraints_six = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints per_constr_six = {(50000000), (5000000), 0, 40};
+    struct periodic_constraints per_constr_six = {(50000000000), (5000000), 0, 40};
     constraints_six->periodic = per_constr_six;
     
     rt_constraints *constraints_seven = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints per_constr_seven = {(50000000), (5000000), 0, 40};
+    struct periodic_constraints per_constr_seven = {(50000000000), (5000000), 0, 40};
     constraints_seven->periodic = per_constr_seven;
     
     rt_constraints *constraints_fourth = (rt_constraints *)malloc(sizeof(rt_constraints));
@@ -744,7 +744,7 @@ void nk_rt_test()
     constraints_fourth->aperiodic = aper_constr;
     
     rt_constraints *constraints_eighth = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints per_constr_eighth = {(5000000000), (500000000), 0, 40};
+    struct periodic_constraints per_constr_eighth = {(5000000000000), (500000000), 0, 40};
     constraints_eighth->periodic = per_constr_eighth;
     
     printk("ABOUT TO START TEST.\n");
