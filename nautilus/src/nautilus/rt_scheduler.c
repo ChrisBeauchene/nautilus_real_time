@@ -47,22 +47,22 @@
 #define APERIODIC 0
 #define SPORADIC 1
 #define PERIODIC 2
-#define SCHEDULER 3
 
 // UTILIZATION FACTOR LIMITS
 #define PERIODIC_UTIL 70000
 #define SPORADIC_UTIL 20000
 #define APERIODIC_UTIL 10000
 
-// Statuses
-#define CREATED 0
+#define ARRIVED 0
 #define ADMITTED 1
-#define RUNNING 2
+#define WAITING 2
 
 // Queue types
 #define RUNNABLE_QUEUE 0
 #define PENDING_QUEUE 1
 #define APERIODIC_QUEUE 2
+#define ARRIVAL_QUEUE 3
+#define WAITING_QUEUE 4
 #define MAX_QUEUE 256
 
 #define QUANTUM 100000000
@@ -87,7 +87,7 @@ static inline uint64_t umin(uint64_t x, uint64_t y);
 
 
 // SCHEDULE FUNCTIONS
-static int sched_sim(void *scheduler);
+static void sched_sim(void *scheduler);
 
 rt_thread* rt_thread_init(int type,
                           rt_constraints *constraints,
