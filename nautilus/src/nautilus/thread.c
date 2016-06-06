@@ -1607,7 +1607,7 @@ nk_sched_init (void)
     }
     
 #ifdef NAUT_CONFIG_USE_RT_SCHEDULER
-    my_cpu->rt_sched = rt_scheduler_init(rt_thread_init(SCHEDULER, NULL, 0, main));
+    my_cpu->rt_sched = rt_scheduler_init(rt_thread_init(APERIODIC, NULL, 0, main));
 #endif
     
     put_cur_thread(main);
