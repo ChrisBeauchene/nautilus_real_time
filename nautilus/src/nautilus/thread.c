@@ -1372,8 +1372,6 @@ nk_need_resched (void)
 {
     nk_thread_t * p;
     nk_thread_t * c;
-    printk("NK NEED RESCHED TSC: %llu\n", rdtsc());
-    RT_THREAD_DEBUG("Inside nk_need_resched\n");
     ASSERT(!irqs_enabled());
     
     c = get_cur_thread();
@@ -1516,7 +1514,7 @@ nk_sched_init_ap (void)
     
     // set my current thread
 #ifdef NAUT_CONFIG_USE_RT_SCHEDULER
-    my_cpu->rt_sched = rt_scheduler_init(rt_thread_init(SCHEDULER, NULL, 0, me));
+    my_cpu->rt_sched = rt_scheduler_init(rt_thread_init(APERIODIC, NULL, 0, me));
 #endif
     
     put_cur_thread(me);

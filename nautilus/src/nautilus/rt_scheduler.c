@@ -101,12 +101,11 @@ rt_thread* rt_thread_init(int type,
     t->constraints = constraints;
     t->start_time = 0;
     t->run_time = 0;
-    // rt_thread->deadline = deadline;
+    rt_thread->deadline = 0;
+
     if (type == PERIODIC)
     {
-        // RT_SCHED_DEBUG("CURRENT CLOCK CYCLE IS %llu\n", cur_time());
         t->deadline = cur_time() + constraints->periodic.period;
-        // RT_SCHED_DEBUG("Deadline: %llu\n", t->deadline);
     } else if (type == SPORADIC)
     {
         t->deadline = cur_time() + deadline;
@@ -123,9 +122,12 @@ rt_scheduler* rt_scheduler_init(rt_thread *main_thread)
     rt_queue *runnable = (rt_queue *)malloc(sizeof(rt_queue) + MAX_QUEUE * sizeof(rt_thread *));
     rt_queue *pending = (rt_queue *)malloc(sizeof(rt_queue) + MAX_QUEUE * sizeof(rt_thread *));
     rt_queue *aperiodic = (rt_queue *)malloc(sizeof(rt_queue) + MAX_QUEUE * sizeof(rt_thread *));
+    rt_queue *arrival = (rt_queue *)malloc(sizeof(rt_queue) + MAX_QUEUE * sizeof(rt_thread *));
+    rt_queue *waiting = (rt_queue *)malloc(sizeof(rt_queue) + MAX_QUEUE * sizeof(rt_thread *));
     scheduler->main_thread = main_thread;
+
     scheduler->run_time = 1000000;
-    if (!scheduler || !runnable || ! pending || !aperiodic) {
+    if (!scheduler || !runnable || ! pending || !aperiodic || !arrival || !waiting) {
         RT_SCHED_ERROR("Could not allocate rt scheduler\n");
         return NULL;
     } else {
@@ -140,8 +142,20 @@ rt_scheduler* rt_scheduler_init(rt_thread *main_thread)
         aperiodic->type = APERIODIC_QUEUE;
         aperiodic->size = 0;
         scheduler->aperiodic = aperiodic;
+
+        arrival->type = ARRIVAL_QUEUE;
+        arrival->size = 0;
+        arrival->head = 0;
+        arrival->tail = 0;
+        scheduler->arrival = arrival;
+
+        waiting->type = WAITING_QUEUE;
+        waiting->size = 0;
+        waiting->head = 0;
+        waiting->tail = 0;
+        scheduler->waiting = waiting;
+
     }
-    scheduler->tsc = (tsc_info *)malloc(sizeof(tsc_info));
     return scheduler;
 }
 
@@ -163,6 +177,7 @@ void enqueue_thread(rt_queue *queue, rt_thread *thread)
             queue->threads[pos] = queue->threads[parent(pos)];
             pos = parent(pos);
         }
+        thread->status = RUNNABLE_QUEUE;
         queue->threads[pos] = thread;
         
     } else if (queue->type == PENDING_QUEUE)
@@ -180,12 +195,12 @@ void enqueue_thread(rt_queue *queue, rt_thread *thread)
             queue->threads[pos] = queue->threads[parent(pos)];
             pos = parent(pos);
         }
+        thread->q_type = PENDING_QUEUE;
         queue->threads[pos] = thread;
         
     } else if (queue->type == APERIODIC_QUEUE)
     {
-        if (queue->size == MAX_QUEUE)
-        {
+        if (queue->size == MAX_QUEUE) {
             RT_SCHED_ERROR("APERIODIC QUEUE IS FULL!");
             return;
         }
@@ -197,6 +212,38 @@ void enqueue_thread(rt_queue *queue, rt_thread *thread)
             queue->threads[pos] = queue->threads[parent(pos)];
             pos = parent(pos);
         }
+        thread->q_type = APERIODIC_QUEUE;
+        queue->threads[pos] = thread;
+    } else if (queue->type == ARRIVAL_QUEUE) 
+    {
+        if (queue->size == MAX_QUEUE - 1) {
+            RT_SCHED_ERROR("ARRIVAL QUEUE IS FULL!");
+            return;
+        }
+
+        queue->size++;
+        uint64_t pos = queue->tail++;
+
+        if (queue->tail == MAX_QUEUE - 1) {
+            queue->tail = 0;
+        }
+
+        thread->q_type = ARRIVAL_QUEUE;
+        queue->threads[pos] = thread;
+    } else if (queue->type == WAITING_QUEUE) 
+    {
+        if (queue->size == MAX_QUEUE) {
+            RT_SCHED_ERROR("WAITING QUEUE IS FULL!");
+            return;
+        }
+
+        queue->size++;
+        uint64_t pos = queue->tail++;
+
+        if (queue->tail == MAX_QUEUE - 1) {
+            queue->tail = 0;
+        }
+        thread->q_type = WAITING_QUEUE;
         queue->threads[pos] = thread;
     }
 }
@@ -236,11 +283,7 @@ rt_thread* dequeue_thread(rt_queue *queue)
         queue->threads[now] = last;
         
         return min;
-    }
-    
-    // 2. PENDING QUEUE
-    //      - DEADLINE IS THE METRIC
-    else if (queue->type == PENDING_QUEUE)
+    } else if (queue->type == PENDING_QUEUE)
     {
         if (queue->size < 1)
         {
@@ -304,6 +347,28 @@ rt_thread* dequeue_thread(rt_queue *queue)
         queue->threads[now] = last;
         
         return min;
+    } else if (queue->type == ARRIVAL_QUEUE)
+    {
+        if (queue->head == queue->tail) {
+            RT_SCHED_ERROR("ARRIVAL QUEUE EMPTY! CAN'T DEQUEUE!\n");
+            return NULL;
+        }
+        uint64_t pos = queue->head++;
+        if (queue->head == MAX_QUEUE - 1) {
+            queue->head = 0;
+        }
+        return queue->threads[pos];
+    } else if (queue->type == WAITING_QUEUE)
+    {
+        if (queue->head == queue->tail) {
+            RT_SCHED_ERROR("WAITING QUEUE EMPTY! CAN'T DEQUEUE!\n");
+            return NULL;
+        }
+        uint64_t pos = queue->head++;
+        if (queue->head == MAX_QUEUE - 1) {
+            queue->head = 0;
+        }
+        return queue->threads[pos];
     }
     return NULL;
 }
@@ -707,7 +772,7 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
     nk_thread_start((nk_thread_fun_t)sched_sim, (void *)scheduler, NULL, 0, 0, &sched, my_cpu_id(), PERIODIC, constraints_first, 0);
 }
 
-static int sched_sim(void *scheduler) {
+static void sched_sim(void *scheduler) {
     printk("In scheduler\n");
 }
 
