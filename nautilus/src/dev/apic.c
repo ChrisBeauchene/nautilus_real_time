@@ -43,6 +43,13 @@
 #define APIC_PRINT(fmt, args...) INFO_PRINT("APIC: " fmt, ##args)
 #define APIC_WARN(fmt, args...)  WARN_PRINT("APIC: " fmt, ##args)
 
+typedef struct apic_tsc {
+    uint64_t tsc_diff;
+    uint64_t apic_diff;
+    uint64_t num_trials;
+    uint64_t avg;
+} apic_tsc;
+
 static inline uint64_t rdtsc();
 static inline apic_tsc* init_apic_tsc();
 static inline void info_dump(apic_tsc *info);
@@ -805,12 +812,6 @@ inline void apic_oneshot_write(struct apic_dev *apic, uint64_t time) {
     
 }
 
-typedef struct apic_tsc {
-    uint64_t tsc_diff;
-    uint64_t apic_diff;
-    uint64_t num_trials;
-    uint64_t avg;
-} apic_tsc;
 
 static inline apic_tsc* init_apic_tsc() {
     apic_tsc *info = (apic_tsc *)malloc(sizeof(apic_tsc));
@@ -844,7 +845,7 @@ static inline apic_loop(struct apic_dev *apic, apic_tsc *info) {
     apic_write(apic, APIC_REG_LVTT, APIC_TIMER_DISABLE);
     uint64_t end = rdtsc();
     info->tsc_diff = (end - start);
-    info->apic_diff = 0xffffffff - apic_read(apic, APIC_REG_TMCCT) + 1);
+    info->apic_diff = (0xffffffff - apic_read(apic, APIC_REG_TMCCT) + 1);
     info->num_trials++;
 }
 
