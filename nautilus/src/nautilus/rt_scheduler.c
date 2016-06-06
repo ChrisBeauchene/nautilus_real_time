@@ -97,7 +97,7 @@ rt_thread* rt_thread_init(int type,
 {
     rt_thread *t = (rt_thread *)malloc(sizeof(rt_thread));
     t->type = type;
-    t->status = CREATED;
+    t->status = ARRIVED;
     t->constraints = constraints;
     t->start_time = 0;
     t->run_time = 0;
