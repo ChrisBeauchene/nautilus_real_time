@@ -746,7 +746,7 @@ void nk_rt_test()
     struct periodic_constraints per_constr_eighth = {(5000000000), (500000000), 0, 40};
     constraints_eighth->periodic = per_constr_eighth;
     
-    RT_DEBUG_PRINT("ABOUT TO START TEST.\n");
+    printk("ABOUT TO START TEST.\n");
     uint64_t first = 1, second = 2, third = 3, fourth = 4, five = 5, six = 6, seven = 7, eight = 8;
     nk_thread_start((nk_thread_fun_t)test_real_time, (void *)first, NULL, 0, 0, &r, my_cpu_id(), PERIODIC, constraints_first, 0);
     printk("Starting the second thread.\n");
