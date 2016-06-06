@@ -63,6 +63,10 @@
 #include "palacios.h"
 #endif
 
+#ifdef NAUT_CONFIG_USE_RT_SCHEDULER
+#include <nautilus/rt_scheduler.h>
+#endif
+
 
 extern spinlock_t printk_lock;
 
@@ -319,6 +323,11 @@ init (unsigned long mbd,
     /* interrupts on */
     sti();
     calibrate_apic(naut->sys.cpus[0]->apic);
+    
+#ifdef NAUT_CONFIG_USE_RT_SCHEDULER
+    printk("BEGIN TESTING THE REAL-TIME SCHEDULER\n");
+    nk_rt_test();
+#endif
     
     nk_vc_init();
 
