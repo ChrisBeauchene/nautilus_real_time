@@ -838,7 +838,7 @@ static inline void info_dump(apic_tsc *info) {
 void calibrate_apic(struct apic_dev *apic) {
     apic_tsc *info = init_apic_tsc();
      {
-        const int num_tests = 100;
+        const int num_tests = 50;
          int i = 0;
          for (i = 0; i < num_tests; i++) {
              apic_loop(apic, info);
