@@ -1350,11 +1350,24 @@ __thread_fork (void)
     
     // put it on the run queue
 #ifdef NAUT_CONFIG_USE_RT_SCHEDULER
-    rt_thread *rt = rt_thread_init(rt_type, rt_constraints, rt_deadline, tid);
+    uint8_t flags = irq_disable_save();
+    nk_thread_t *me = get_cur_thread();
+    irq_enable_restore(flags);
+
+    if (me->rt_thread == NULL) {
+        RT_THREAD_DEBUG("REAL-TIME FORK FAILED.\n");
+        return 0;
+    }
+    rt_thread *rt_parent = me->rt_thread;
+    rt_thread *rt = rt_thread_init(rt_parent->type, rrt->parent->constraints, rt_parent->rt_deadline, tid);
     struct sys_info *sys = per_cpu_get(system);
     if (sys->cpus[cpu]->rt_sched)
     {
-        enqueue_thread(sys->cpus[cpu]->rt_sched->arrival, rt);
+        if (rt->type == APERIODIC) {
+            enqueue_thread(sys->cpus[cpu]->rt_sched->aperiodic, rt);
+        } else {
+            enqueue_thread(sys->cpus[cpu]->rt_sched->arrival, rt);  
+        }
     }
 #endif
     nk_enqueue_thread_on_runq(t, t->bound_cpu);
