@@ -826,6 +826,7 @@ static inline void info_dump(apic_tsc *info) {
     APIC_DEBUG("TSC difference: %llu\n", info->tsc_diff);
     APIC_DEBUG("APIC difference: %llu\n", info->apic_diff);
     APIC_DEBUG("Trials difference: %llu\n", info->num_trials);
+    printk("wt");
 }
 
 void calibrate_apic(struct apic_dev *apic) {
