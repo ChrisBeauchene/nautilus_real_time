@@ -27,7 +27,7 @@
 #define RT_SCHED_DEBUG(fmt, args...)
 #ifdef NAUT_CONFIG_DEBUG_RT_SCHEDULER
 #undef RT_SCHED_DEBUG
-#define RT_SCHED_DEBUG(fmt, args...) RT_DEBUG_PRINT("SCHED: " fmt, ##args)
+#define RT_SCHED_DEBUG(fmt, args...) printk("RT SCHED: " fmt, ##args)
 #endif
 
 #define parent(i) ((i) ? (((i) - 1) >> 1) : 0)
@@ -628,7 +628,7 @@ static inline uint64_t get_avg_per(rt_queue *runnable, rt_queue *pending, rt_thr
 
 static inline uint64_t get_min_per(rt_queue *runnable, rt_queue *pending, rt_thread *thread)
 {
-    uint64_t min_period = UINT64_MAX;
+    uint64_t min_period = 0xFFFFFFFFFFFFFFFF;
     int i;
     for (i = 0; i < runnable->size; i++)
     {
@@ -688,17 +688,6 @@ static inline uint64_t get_spor_util(rt_queue *runnable)
         }
     }
     return util;
-}
-
-static void test_thread(void *in)
-{
-    nk_thread_id_t tid = nk_get_tid();
-    printk("(%lx) Hello from thread... \n", tid);
-    struct naut_info * naut = &nautilus_info;
-    apic_oneshot_write(naut->sys.cpus[my_cpu_id()]->apic, 510000);
-    udelay(1000000);
-    RT_DEBUG_PRINT("Apic reads current clock time is %d initial clock time is %d\n", apic_oneshot_read(naut->sys.cpus[my_cpu_id()]->apic), apic_read(naut->sys.cpus[my_cpu_id()]->apic, APIC_REG_TMICT));
-    printk("(%lx) woke up!\n", tid);
 }
 
 static void test_real_time(void *in)
