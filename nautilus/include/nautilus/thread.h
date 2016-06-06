@@ -171,6 +171,8 @@ extern "C" {
         void * input;
         nk_thread_fun_t fun;
         
+        struct nk_virtual_console *vc;
+        
         const void * tls[TLS_MAX_KEYS];
         
         uint8_t fpu_state[FXSAVE_SIZE] __align(16);
@@ -187,7 +189,6 @@ extern "C" {
         nk_thread_queue_t * thread_list;
         uint_t num_threads;
     };
-    
     
     
     nk_thread_id_t __thread_fork(void);
