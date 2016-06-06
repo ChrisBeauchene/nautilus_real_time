@@ -34,4 +34,5 @@ obj-y += \
 
 obj-$(NAUT_CONFIG_PROFILE) += instrument.o
 obj-$(NAUT_CONFIG_XEON_PHI) += sfi.o
+obj-$(NAUT_CONFIG_USE_RT_SCHEDULER) += rt_scheduler.o
 
