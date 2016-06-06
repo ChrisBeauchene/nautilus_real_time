@@ -479,8 +479,9 @@ struct nk_thread *rt_need_resched()
                 return rt_n->thread;
             }
             enqueue_thread(scheduler->aperiodic, rt_c);
-            set_timer(scheduler, scheduler->main_thread);
-            return scheduler->main_thread->thread;
+            rt_n = dequeue_thread(scheduler->aperiodic);
+            set_timer(scheduler, rt_n);
+            return rt_n;
             break;
             
         case SPORADIC:
