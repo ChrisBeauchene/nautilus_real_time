@@ -811,8 +811,17 @@ apic_init (struct cpu * core)
 }
 
 inline void apic_oneshot_write(struct apic_dev *apic, uint64_t time) {
-    
+    apic_write(apic, APIC_REG_LVTT, APIC_TIMER_ONESHOT | APIC_DEL_MODE_FIXED | APIC_TIMER_INT_VEC);
+    apic_write(apic, APIC_REG_TMDCR, APIC_TIMER_DIVCODE);
+    apic_write(apic, APIC_REG_TMICT, (time / apic->scale);
 }
+
+               
+               
+void apic_oneshot_test(struct apic_dev *apic) {
+    apic_oneshot_write(apic, 2700000000);
+}
+
 
 
 static inline apic_tsc* init_apic_tsc() {
@@ -832,7 +841,6 @@ static inline void info_dump(apic_tsc *info) {
     APIC_DEBUG("Scale: %llu\n", info->scale);
     APIC_DEBUG("Average scale: %llu\n", info->avg);
     APIC_DEBUG("Number of trials: %llu\n", info->num_trials);
-    printk("wt");
 }
 
 void calibrate_apic(struct apic_dev *apic) {
@@ -844,6 +852,7 @@ void calibrate_apic(struct apic_dev *apic) {
              apic_loop(apic, info);
              info_dump(info);
          }
+         apic->scale = info->avg;
     }
 }
 

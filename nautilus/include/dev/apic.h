@@ -196,7 +196,7 @@ struct apic_dev {
     uint_t   id;
     uint64_t spur_int_cnt;
     uint64_t err_int_cnt;
-    uint64_t frequency;
+    uint64_t scale;
 };
 
 
