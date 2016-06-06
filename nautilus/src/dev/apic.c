@@ -53,7 +53,7 @@ typedef struct apic_tsc {
 static inline uint64_t get_tsc();
 static inline apic_tsc* init_apic_tsc();
 static inline void info_dump(apic_tsc *info);
-static inline void apic_loop(struct apic_dev *apic, apic_tsc *info)
+static inline void apic_loop(struct apic_dev *apic, apic_tsc *info);
 
 
 static const char * apic_err_codes[8] = {
