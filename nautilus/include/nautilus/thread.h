@@ -195,6 +195,16 @@ extern "C" {
     nk_thread_t* nk_need_resched(void);
     int nk_sched_init(void);
     int nk_sched_init_ap(void);
+    int nk_thread_start_sim (nk_thread_fun_t fun,
+                 void *input,
+                 void **output,
+                 uint8_t is_detached,
+                 nk_stack_size_t stack_size,
+                 nk_thread_id_t *tid,
+                 int cpu,
+                 int rt_type,
+                 rt_constraints *rt_constraints,
+                 uint64_t rt_deadline);
     
     void nk_schedule(void);
     
