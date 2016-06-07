@@ -955,6 +955,8 @@ static void sched_sim(void *scheduler) {
         // dequeue from the arrival thread
             // run admit on every function in the pending and runnable queues
             // this will guarantee that we can enqueue 
+        udelay(100000);
+        printk("Inside Sim\n");
     }
 
 }
