@@ -645,7 +645,7 @@ struct nk_thread *rt_need_resched()
     }
     
     uint64_t end_time = scheduler->run_time + cur_time();
-    uint64_t slack = 10000000;
+    uint64_t slack = 0;
     scheduler->tsc->end_time = cur_time();
     
     rt_thread *rt_n;
