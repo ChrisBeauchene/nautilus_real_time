@@ -97,7 +97,7 @@ static inline void update_exit(rt_thread *t);
 static inline void update_enter(rt_thread *t);
 static int check_deadlines(rt_thread *t);
 static inline void update_periodic(rt_thread *t);
-static void set_timer(rt_scheduler *scheduler, rt_thread *thread);
+static void set_timer(rt_scheduler *scheduler, rt_thread *thread, uint64_t end_time, uint64_t slack);
 
 // Admission Control Functions
 static rt_thread_sim *rt_need_resched_logic(rt_simulator *simulator, rt_thread_sim *thread, uint64_t time);
@@ -590,7 +590,7 @@ void rt_thread_dump(rt_thread *thread)
 }
 
 
-static void set_timer(rt_scheduler *scheduler, rt_thread *current_thread)
+static void set_timer(rt_scheduler *scheduler, rt_thread *current_thread, uint64_t end_time, uint64_t slack)
 {
     scheduler->tsc->start_time = cur_time();
     struct sys_info *sys = per_cpu_get(system);
@@ -600,26 +600,26 @@ static void set_timer(rt_scheduler *scheduler, rt_thread *current_thread)
         uint64_t completion_time = 0;
         if (current_thread->type == PERIODIC)
         {
-            apic_oneshot_write(apic, umin(thread->deadline - cur_time(), (current_thread->constraints->periodic.slice - current_thread->run_time)));
-            scheduler->tsc->set_time = umin(thread->deadline - cur_time(), (current_thread->constraints->periodic.slice - current_thread->run_time));
+            apic_oneshot_write(apic, umin(thread->deadline - end_time, (current_thread->constraints->periodic.slice - current_thread->run_time) + slack));
+            scheduler->tsc->set_time = umin(thread->deadline - end_time, (current_thread->constraints->periodic.slice - current_thread->run_time));
         } else if (current_thread->type == SPORADIC)
         {
-            apic_oneshot_write(apic, umin(thread->deadline - cur_time(), (current_thread->constraints->sporadic.work - current_thread->run_time)));
-            scheduler->tsc->set_time = umin(thread->deadline - cur_time(), (current_thread->constraints->sporadic.work - current_thread->run_time));
+            apic_oneshot_write(apic, umin(thread->deadline - end_time, (current_thread->constraints->sporadic.work - current_thread->run_time) + slack));
+            scheduler->tsc->set_time = umin(thread->deadline - end_time, (current_thread->constraints->sporadic.work - current_thread->run_time) + slack);
         } else
         {
-            apic_oneshot_write(apic, umin(thread->deadline - cur_time(), QUANTUM));
-            scheduler->tsc->set_time = umin(thread->deadline - cur_time(), QUANTUM);
+            apic_oneshot_write(apic, umin(thread->deadline - end_time, QUANTUM));
+            scheduler->tsc->set_time = umin(thread->deadline - end_time, QUANTUM);
         }
     } else if (scheduler->pending->size == 0 && current_thread) {
         if (current_thread->type == PERIODIC)
         {
-            apic_oneshot_write(apic, (current_thread->constraints->periodic.slice - current_thread->run_time));
-            scheduler->tsc->set_time = (current_thread->constraints->periodic.slice - current_thread->run_time);
+            apic_oneshot_write(apic, (current_thread->constraints->periodic.slice - current_thread->run_time) + slack;
+            scheduler->tsc->set_time = (current_thread->constraints->periodic.slice - current_thread->run_time) + slack;
         } else if (current_thread->type == SPORADIC)
         {
-            apic_oneshot_write(apic, (current_thread->constraints->sporadic.work - current_thread->run_time));
-            scheduler->tsc->set_time = (current_thread->constraints->sporadic.work - current_thread->run_time);
+            apic_oneshot_write(apic, (current_thread->constraints->sporadic.work - current_thread->run_time) + slack);
+            scheduler->tsc->set_time = (current_thread->constraints->sporadic.work - current_thread->run_time) + slack;
         }
         else {
             apic_oneshot_write(apic, QUANTUM);
@@ -644,13 +644,15 @@ struct nk_thread *rt_need_resched()
         update_exit(rt_c);
     }
     
+    uint64_t end_time = scheduler->run_time + cur_time();
+    uint64_t slack = 10000;
     scheduler->tsc->end_time = cur_time();
     
     rt_thread *rt_n;
     
     while (scheduler->pending->size > 0)
     {
-        if (scheduler->pending->threads[0]->deadline < cur_time() + scheduler->run_time)
+        if (scheduler->pending->threads[0]->deadline < end_time)
         {
             rt_thread *arrived_thread = dequeue_thread(scheduler->pending);
             update_periodic(arrived_thread);
@@ -671,12 +673,12 @@ struct nk_thread *rt_need_resched()
                 enqueue_thread(scheduler->aperiodic, rt_c);
                 rt_n = dequeue_thread(scheduler->runnable);
                 update_enter(rt_n);
-                set_timer(scheduler, rt_n);
+                set_timer(scheduler, rt_n, end_time, slack);
                 return rt_n->thread;
             }
             enqueue_thread(scheduler->aperiodic, rt_c);
             rt_n = dequeue_thread(scheduler->aperiodic);
-            set_timer(scheduler, rt_n);
+            set_timer(scheduler, rt_n, end_time, slack);
             return rt_n->thread;
             break;
             
@@ -688,7 +690,7 @@ struct nk_thread *rt_need_resched()
                     rt_n = dequeue_thread(scheduler->runnable);
                     enqueue_thread(scheduler->runnable, rt_c);
                     update_enter(rt_n);
-                    set_timer(scheduler, rt_n);
+                    set_timer(scheduler, rt_n, end_time, slack);
                     return rt_n->thread;
                 } else
                 {
@@ -697,7 +699,7 @@ struct nk_thread *rt_need_resched()
                         check_deadlines(rt_c);
                         rt_n = dequeue_thread(scheduler->runnable);
                         update_enter(rt_n);
-                        set_timer(scheduler, rt_n);
+                        set_timer(scheduler, rt_n, end_time, slack);
                         return rt_n->thread;
                     }
                 }
@@ -706,12 +708,12 @@ struct nk_thread *rt_need_resched()
             if (rt_c->run_time <= rt_c->constraints->sporadic.work)
             {
                 update_enter(rt_c);
-                set_timer(scheduler, rt_c);
+                set_timer(scheduler, rt_c, end_time, slack);
                 return rt_c->thread;
             }
             rt_n = dequeue_thread(scheduler->aperiodic);
             update_enter(rt_n);
-            set_timer(scheduler, rt_n);
+            set_timer(scheduler, rt_n, end_time, slack);
             return rt_n->thread;
             break;
             
@@ -727,12 +729,12 @@ struct nk_thread *rt_need_resched()
                 if (scheduler->runnable->size > 0) {
                     rt_n = dequeue_thread(scheduler->runnable);
                     update_enter(rt_n);
-                    set_timer(scheduler, rt_n);
+                    set_timer(scheduler, rt_n, end_time, slack);
                     return rt_n->thread;
                 }
                 
                 rt_n = dequeue_thread(scheduler->aperiodic);
-                set_timer(scheduler, rt_n);
+                set_timer(scheduler, rt_n, end_time, slack);
                 return rt_n->thread;
             } else {
                 if (scheduler->runnable->size > 0)
@@ -741,18 +743,18 @@ struct nk_thread *rt_need_resched()
                         rt_n = dequeue_thread(scheduler->runnable);
                         enqueue_thread(scheduler->runnable, rt_c);
                         update_enter(rt_n);
-                        set_timer(scheduler, rt_n);
+                        set_timer(scheduler, rt_n, end_time, slack);
                         return rt_n->thread;
                     }
                 }
             }
             update_enter(rt_c);
-            set_timer(scheduler, rt_c);
+            set_timer(scheduler, rt_c, end_time, slack);
             return rt_c->thread;
             break;
         default:
             update_enter(rt_c);
-            set_timer(scheduler, rt_c);
+            set_timer(scheduler, rt_c, end_time, slack);
             return c;
     }
     
