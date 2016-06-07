@@ -993,7 +993,7 @@ static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler) {
 
     simulator->aperiodic->size = scheduler->aperiodic->size;
     for (i = 0; i < simulator->aperiodic->size; i++) {
-        rt_thread *s = scheduler->aperiodc->threads[i];
+        rt_thread *s = scheduler->aperiodic->threads[i];
         rt_thread_sim *d = (rt_thread_sim *)malloc(sizeof(rt_thread_sim));
         d->type = s->type;
         d->q_type = s->q_type;
