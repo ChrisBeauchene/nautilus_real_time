@@ -261,7 +261,6 @@ void enqueue_thread(rt_queue *queue, rt_thread *thread)
     } else if (queue->type == APERIODIC_QUEUE)
     {
         if (queue->size == MAX_QUEUE) {
-            RT_SCHED_ERROR("APERIODIC QUEUE IS FULL!");
             return;
         }
         
@@ -410,7 +409,7 @@ rt_thread* dequeue_thread(rt_queue *queue)
     } else if (queue->type == ARRIVAL_QUEUE)
     {
         if (queue->head == queue->tail) {
-            RT_SCHED_ERROR("ARRIVAL QUEUE EMPTY! CAN'T DEQUEUE!\n");
+            // RT_SCHED_ERROR("ARRIVAL QUEUE EMPTY! CAN'T DEQUEUE!\n");
             return NULL;
         }
         uint64_t pos = queue->head++;
