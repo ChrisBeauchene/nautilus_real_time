@@ -1359,6 +1359,7 @@ __thread_fork (void)
         RT_THREAD_DEBUG("REAL-TIME FORK FAILED.\n");
         return 0;
     }
+
     rt_thread *rt_parent = me->rt_thread;
     rt_thread *rt = rt_thread_init(rt_parent->type, rt_parent->constraints, rt_parent->deadline, tid);
     struct sys_info *sys = per_cpu_get(system);
@@ -1370,9 +1371,10 @@ __thread_fork (void)
             enqueue_thread(sys->cpus[cpu]->rt_sched->arrival, rt);  
         }
     }
-#endif
+
+#else 
     nk_enqueue_thread_on_runq(t, t->bound_cpu);
-    
+#endif
     // return child's tid to parent
     return tid;
 }
