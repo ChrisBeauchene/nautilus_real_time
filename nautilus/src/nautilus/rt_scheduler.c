@@ -160,8 +160,11 @@ rt_scheduler* rt_scheduler_init(rt_thread *main_thread)
     rt_queue *arrival = (rt_queue *)malloc(sizeof(rt_queue) + MAX_QUEUE * sizeof(rt_thread *));
     rt_queue *waiting = (rt_queue *)malloc(sizeof(rt_queue) + MAX_QUEUE * sizeof(rt_thread *));
     scheduler->main_thread = main_thread;
-    scheduler->run_time = 10000000;
-    if (!scheduler || !runnable || ! pending || !aperiodic || !arrival || !waiting) {
+
+    tsc_info *info = (tsc_info *)malloc(sizeof(tsc_info));
+
+
+    if (!scheduler || !runnable || ! pending || !aperiodic || !arrival || !waiting || !info) {
         RT_SCHED_ERROR("Could not allocate rt scheduler\n");
         return NULL;
     } else {
@@ -189,7 +192,10 @@ rt_scheduler* rt_scheduler_init(rt_thread *main_thread)
         waiting->tail = 0;
         scheduler->waiting = waiting;
 
+        scheduler->tsc = info;
+
     }
+
     enqueue_thread(aperiodic, main_thread);
     return scheduler;
 }
@@ -593,6 +599,7 @@ void rt_thread_dump(rt_thread *thread)
 static void set_timer(rt_scheduler *scheduler, rt_thread *current_thread, uint64_t end_time, uint64_t slack)
 {
     scheduler->tsc->start_time = cur_time();
+    end_time = cur_time();
     struct sys_info *sys = per_cpu_get(system);
     struct apic_dev *apic = sys->cpus[my_cpu_id()]->apic;
     if (scheduler->pending->size > 0 && current_thread) {
