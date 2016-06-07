@@ -326,7 +326,7 @@ init (unsigned long mbd,
     
 #ifdef NAUT_CONFIG_USE_RT_SCHEDULER
     printk("BEGIN TESTING THE REAL-TIME SCHEDULER\n");
-    rt_start(10000, 100000);
+    rt_start(1000000, 10000000);
 #endif
     
 
