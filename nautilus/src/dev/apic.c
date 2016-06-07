@@ -812,7 +812,7 @@ apic_init (struct cpu * core)
 inline void apic_oneshot_write(struct apic_dev *apic, uint64_t time) {
     apic_write(apic, APIC_REG_LVTT, APIC_TIMER_ONESHOT | APIC_DEL_MODE_FIXED | APIC_TIMER_INT_VEC);
     apic_write(apic, APIC_REG_TMDCR, APIC_TIMER_DIVCODE);
-    uint32_t count = (apic->scale == 0) ? (time / 43) : (time / apic->scale);
+    uint32_t count = (apic->scale >= 1) ? (time / 42) : (time / (apic->scale - 1);
     apic_write(apic, APIC_REG_TMICT, count);
 }
 
