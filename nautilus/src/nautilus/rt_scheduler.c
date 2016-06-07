@@ -977,7 +977,7 @@ static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_s
     
     switch (thread->type) {
         case APERIODIC:
-            update_exit_logic(logic, time);
+            update_exit_logic(thread, time);
             thread->constraints->aperiodic.priority = thread->run_time;
             
             if (simulator->runnable->size > 0)
