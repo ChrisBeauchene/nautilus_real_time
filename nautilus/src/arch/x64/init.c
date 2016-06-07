@@ -333,11 +333,11 @@ init (unsigned long mbd,
         udelay(100000);
         printk("Inside init\n");
     }
-    // nk_vc_init();
+    nk_vc_init();
 
-    // start_shell();
+    start_shell();
 
-    // runtime_init();
+    runtime_init();
     
     
     // printk("Nautilus boot thread yielding (indefinitely)\n");
