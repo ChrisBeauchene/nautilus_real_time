@@ -328,16 +328,17 @@ init (unsigned long mbd,
     printk("BEGIN TESTING THE REAL-TIME SCHEDULER\n");
     rt_start(10000, 100000);
 #endif
+    runtime_init();
     
     while (1) {
         udelay(100000);
         printk("Inside init\n");
     }
-    nk_vc_init();
+    // nk_vc_init();
 
-    start_shell();
+    // start_shell();
 
-    runtime_init();
+    
     
     
     // printk("Nautilus boot thread yielding (indefinitely)\n");
