@@ -1359,9 +1359,9 @@ __thread_fork (void)
         return 0;
     }
     rt_thread *rt_parent = me->rt_thread;
-    rt_thread *rt = rt_thread_init(rt_parent->type, rt_parent->constraints, rt_parent->rt_deadline, tid);
+    rt_thread *rt = rt_thread_init(rt_parent->type, rt_parent->constraints, rt_parent->deadline, tid);
     struct sys_info *sys = per_cpu_get(system);
-    if (sys->cpus[cpu]->rt_sched)
+    if (sys->cpus[my_cpu_id()]->rt_sched)
     {
         if (rt->type == APERIODIC) {
             enqueue_thread(sys->cpus[cpu]->rt_sched->aperiodic, rt);
@@ -1471,8 +1471,7 @@ nk_schedule (void)
  *
  * scheduler init routine for APs once they
  * have booted up
- *
- */
+  */
 int
 nk_sched_init_ap (void)
 {
