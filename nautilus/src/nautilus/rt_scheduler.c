@@ -965,12 +965,6 @@ static void sched_sim(void *scheduler) {
 
 }
 
-typedef struct rt_simulator {
-    rt_queue_sim *runnable;
-    rt_queue_sim *pending;
-    rt_queue_sim *aperiodic;
-} rt_simulator;
-
 static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler) {
     int i;
     simulator->runnable->size = scheduler->runnable->size;
