@@ -323,12 +323,10 @@ init (unsigned long mbd,
     /* interrupts on */
     sti();
     calibrate_apic(naut->sys.cpus[0]->apic);
-
-    runtime_init();
     
 #ifdef NAUT_CONFIG_USE_RT_SCHEDULER
     printk("BEGIN TESTING THE REAL-TIME SCHEDULER\n");
-    rt_start(10000, 100000);
+    // rt_start(10000, 100000);
 #endif
     
 
@@ -336,6 +334,8 @@ init (unsigned long mbd,
         udelay(100000);
         printk("Inside init\n");
     }
+
+    // runtime_init();
     // nk_vc_init();
 
     // start_shell();
