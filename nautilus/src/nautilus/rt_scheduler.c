@@ -641,7 +641,7 @@ struct nk_thread *rt_need_resched()
     rt_thread *rt_c = c->rt_thread;
     
     if (rt_c) {
-        rt_c->exit_time = cur_time();
+        update_exit(rt_c);
     }
     
     scheduler->tsc->end_time = cur_time();
@@ -650,7 +650,7 @@ struct nk_thread *rt_need_resched()
     
     while (scheduler->pending->size > 0)
     {
-        if (scheduler->pending->threads[0]->deadline < cur_time())
+        if (scheduler->pending->threads[0]->deadline < cur_time() + scheduler->run_time)
         {
             rt_thread *arrived_thread = dequeue_thread(scheduler->pending);
             update_periodic(arrived_thread);
@@ -664,7 +664,6 @@ struct nk_thread *rt_need_resched()
     
     switch (rt_c->type) {
         case APERIODIC:
-            update_exit(rt_c);
             rt_c->constraints->aperiodic.priority = rt_c->run_time;
             
             if (scheduler->runnable->size > 0)
@@ -682,7 +681,6 @@ struct nk_thread *rt_need_resched()
             break;
             
         case SPORADIC:
-            update_exit(rt_c);
             if (scheduler->runnable->size > 0)
             {
                 if (rt_c->deadline > scheduler->runnable->threads[0]->deadline)
@@ -718,7 +716,6 @@ struct nk_thread *rt_need_resched()
             break;
             
         case PERIODIC:
-            update_exit(rt_c);
             if (rt_c->run_time >= rt_c->constraints->periodic.slice) {
                 if (check_deadlines(rt_c)) {
                     update_periodic(rt_c);
@@ -726,6 +723,7 @@ struct nk_thread *rt_need_resched()
                 } else {
                     enqueue_thread(scheduler->pending, rt_c);
                 }
+
                 if (scheduler->runnable->size > 0) {
                     rt_n = dequeue_thread(scheduler->runnable);
                     update_enter(rt_n);
@@ -733,8 +731,9 @@ struct nk_thread *rt_need_resched()
                     return rt_n->thread;
                 }
                 
-                set_timer(scheduler, scheduler->main_thread);
-                return scheduler->main_thread->thread;
+                rt_n = dequeue_thread(scheduler->aperiodic);
+                set_timer(scheduler, rt_n);
+                return rt_n->thread;
             } else {
                 if (scheduler->runnable->size > 0)
                 {
@@ -761,13 +760,11 @@ struct nk_thread *rt_need_resched()
 
 static inline void update_exit(rt_thread *t)
 {
-    // printk("exiting thread %d\n", t->thread->tid);
     t->run_time += (t->exit_time - t->start_time);
 }
 
 static inline void update_enter(rt_thread *t)
 {
-    // printk("Entering thread %d\n", t->thread->tid);
     t->start_time = cur_time();
 }
 
