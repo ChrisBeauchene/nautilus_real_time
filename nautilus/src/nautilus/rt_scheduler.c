@@ -67,6 +67,29 @@
 
 #define QUANTUM 100000000
 
+typedef struct rt_thread_sim {
+    rt_type type;
+    queue_type q_type;
+    rt_status status;
+    rt_constraints *constraints;
+    uint64_t start_time; 
+    uint64_t run_time;
+    uint64_t deadline;
+    uint64_t exit_time;
+} rt_thread_sim;
+
+typedef struct rt_queue_sim {
+    queue_type type;
+    uint64_t size, head, tail;
+    rt_thread_sim *threads[0];
+} rt_queue_sim;
+
+typedef struct rt_simulator {
+    rt_queue_sim *runnable;
+    rt_queue_sim *pending;
+    rt_queue_sim *aperiodic;
+} rt_simulator;
+
 static rt_simulator* init_simulator();
 
 // Switching thread functions
