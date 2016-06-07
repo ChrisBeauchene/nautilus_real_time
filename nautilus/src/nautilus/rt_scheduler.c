@@ -947,7 +947,7 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
     struct periodic_constraints per_constr_first = {sched_period, sched_slice_time};
     constraints_first->periodic = per_constr_first;
 
-    nk_thread_start((nk_thread_fun_t)sched_sim, (void *)scheduler, NULL, 0, 0, &sched, my_cpu_id(), APERIODIC, constraints_first, 0);
+    nk_thread_start((nk_thread_fun_t)sched_sim, (void *)scheduler, NULL, 0, 0, &sched, my_cpu_id(), PERIODIC, constraints_first, 0);
 }
 
 static void sched_sim(void *scheduler) {
