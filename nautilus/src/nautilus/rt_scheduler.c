@@ -88,7 +88,7 @@ typedef struct rt_queue_sim {
     queue_type type;
     uint64_t size, head, tail;
     rt_thread_sim *threads[0];
-} rt_queue_sim ;
+} rt_queue_sim;
 
 static rt_simulator* init_simulator();
 
