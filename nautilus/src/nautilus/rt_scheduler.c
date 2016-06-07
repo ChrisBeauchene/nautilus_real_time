@@ -761,8 +761,10 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
 }
 
 static void sched_sim(void *scheduler) {
-    printk("In scheduler\n");
-    while (1) {}
+    while (1) {
+        udelay(100000);
+        printk("Sched sim\n");
+    }
 
 }
 
