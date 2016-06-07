@@ -1,0 +1,6 @@
+
+make clean
+make isoimage
+scp nautilus.bin nautilus.iso root@v-test-r415-2.cs.northwestern.edu:/boot
+ssh root@v-test-r415-2.cs.northwestern.edu ./reboot_to_nautilus
+

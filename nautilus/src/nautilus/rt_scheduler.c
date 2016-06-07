@@ -159,12 +159,25 @@ rt_scheduler* rt_scheduler_init(rt_thread *main_thread)
     rt_queue *aperiodic = (rt_queue *)malloc(sizeof(rt_queue) + MAX_QUEUE * sizeof(rt_thread *));
     rt_queue *arrival = (rt_queue *)malloc(sizeof(rt_queue) + MAX_QUEUE * sizeof(rt_thread *));
     rt_queue *waiting = (rt_queue *)malloc(sizeof(rt_queue) + MAX_QUEUE * sizeof(rt_thread *));
-    scheduler->main_thread = main_thread;
+    tsc_info *info = (tsc_info *)malloc(sizeof(tsc_info));
+
+	scheduler->main_thread = main_thread;
     scheduler->run_time = 10000000;
-    if (!scheduler || !runnable || ! pending || !aperiodic || !arrival || !waiting) {
+    if (!scheduler || !runnable || ! pending || !aperiodic || !arrival || !waiting || !info) {
         RT_SCHED_ERROR("Could not allocate rt scheduler\n");
         return NULL;
     } else {
+#define ZERO(x) memset(x, 0, sizeof(*x))
+#define ZERO_QUEUE(x) memset(x, 0, sizeof(rt_queue) + MAX_QUEUE * sizeof(rt_thread *))
+
+		ZERO(scheduler);
+		ZERO(info);
+		ZERO_QUEUE(runnable);
+		ZERO_QUEUE(pending);
+		ZERO_QUEUE(aperiodic);
+		ZERO_QUEUE(arrival);
+		ZERO_QUEUE(waiting);
+		
         runnable->type = RUNNABLE_QUEUE;
         runnable->size = 0;
         scheduler->runnable = runnable;
@@ -188,6 +201,8 @@ rt_scheduler* rt_scheduler_init(rt_thread *main_thread)
         waiting->head = 0;
         waiting->tail = 0;
         scheduler->waiting = waiting;
+
+		scheduler->tsc = info;
 
     }
     enqueue_thread(aperiodic, main_thread);
