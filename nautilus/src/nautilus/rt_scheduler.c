@@ -982,7 +982,7 @@ static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_s
             
             if (simulator->runnable->size > 0)
             {
-                enqueue_thread_logic(simuator->aperiodic, thread);
+                enqueue_thread_logic(simulator->aperiodic, thread);
                 next = dequeue_thread_logic(simulator->runnable);
                 update_enter_logic(next, time);
                 set_timer_logic(simulator, next, time);
@@ -1013,7 +1013,7 @@ static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_s
                     next = dequeue_thread_logic(simulator->runnable);
                     update_enter_logic(next, time);
                     set_timer_logic(simulator, next, time);
-                    return next
+                    return next;
                 }
                 next = dequeue_thread_logic(simulator->aperiodic);
                 update_enter_logic(next, time);
@@ -1023,7 +1023,7 @@ static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_s
                 if (simulator->runnable->size > 0)
                 {
                     if (thread->deadline > simulator->runnable->threads[0]->deadline) {
-                        next = dequeue_thread_logic(simulator>runnable);
+                        next = dequeue_thread_logic(simulator->runnable);
                         enqueue_thread_logic(simulator->runnable, thread);
                         update_enter_logic(next, time);
                         set_timer_logic(simulator, next, time);
@@ -1037,8 +1037,8 @@ static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_s
             return next;
         default:
             update_enter_logic(thread, time);
-            set_timer(simulator, thread, time);
-            return c;
+            set_timer_logic(simulator, thread, time);
+            return thread;
     }
     
 }
@@ -1076,10 +1076,10 @@ static uint64_t set_timer_logic(rt_simulator *simulator, rt_thread_sim *thread, 
         rt_thread_sim *next = simulator->pending->threads[0];
         if (thread->type == PERIODIC)
         {
-            return umin(next->deadline - time, (thread->constraints->periodic.slice - thread->run_time)));
+            return umin(next->deadline - time, (thread->constraints->periodic.slice - thread->run_time));
         } else
         {
-            return umin(next->deadline - time, QUANTUM));
+            return umin(next->deadline - time, QUANTUM);
         }
     } else if (simulator->pending->size == 0 && thread) {
         if (thread->type == PERIODIC)
