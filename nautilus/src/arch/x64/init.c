@@ -330,8 +330,9 @@ init (unsigned long mbd,
 #endif
     
     while (1) {
-    udelay(100000);
-    printk("Inside init\n");
+        udelay(100000);
+        printk("Inside init\n");
+    }
     // nk_vc_init();
 
     // start_shell();
