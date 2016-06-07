@@ -100,7 +100,7 @@ static inline void update_periodic(rt_thread *t);
 static void set_timer(rt_scheduler *scheduler, rt_thread *thread);
 
 // Admission Control Functions
-static nk_thread *rt_need_resched_logic(rt_scheduler *scheduler, rt_thread *thread, uint64_t time);
+static rt_thread *rt_need_resched_logic(rt_scheduler *scheduler, rt_thread *thread, uint64_t time);
 static uint64_t set_timer_logic(rt_simulator *simulator, rt_thread_sim *thread, uint64_t time);
 static void enqueue_thread_logic(rt_queue_sim *queue, rt_thread_sim *thread);
 static rt_thread_sim* dequeue_thread_logic(rt_queue_sim *queue);
