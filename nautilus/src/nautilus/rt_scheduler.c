@@ -108,6 +108,9 @@ static inline void update_exit_logic(rt_thread_sim *t, uint64_t time);
 static inline void update_enter_logic(rt_thread_sim *t, uint64_t time);
 static int check_deadlines_logic(rt_thread_sim *t, uint64_t time);
 static inline void update_periodic_logic(rt_thread_sim *t, uint64_t time);
+static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler);
+
+static void free_threads_sim(rt_simulator *simulator);
 
 static inline uint64_t get_min_per(rt_queue *runnable, rt_queue *queue, rt_thread *thread);
 static inline uint64_t get_avg_per(rt_queue *runnable, rt_queue *pending, rt_thread *thread);
@@ -951,6 +954,7 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
 }
 
 static void sched_sim(void *scheduler) {
+    rt_scheduler *sched = (rt_scheduler *)scheduler;
     while (1) {
         // dequeue from the arrival thread
             // run admit on every function in the pending and runnable queues
@@ -959,6 +963,105 @@ static void sched_sim(void *scheduler) {
         printk("Inside Sim\n");
     }
 
+}
+
+typedef struct rt_simulator {
+    rt_queue_sim *runnable;
+    rt_queue_sim *pending;
+    rt_queue_sim *aperiodic;
+} rt_simulator;
+
+static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler) {
+    int i;
+    simulator->runnable->size = scheduler->runnable->size;
+    for (i = 0; i < simulator->runnable->size; i++) {
+        rt_thread *s = scheduler->runnable->threads[i];
+        rt_thread_sim *d = (rt_thread_sim *)malloc(sizeof(rt_thread_sim));
+        d->type = s->type;
+        d->q_type = s->q_type;
+        d->status = s->status;
+
+        rt_constraints *constraints = (rt_constraints *)malloc(sizeof(rt_constraints));
+        if (d->type == PERIODIC) {
+            struct periodic_constraints constr = {(s->constraints->periodic.period), (s->constraints->periodic.slice)};
+            constraints->periodic = constr;
+        } else if (d->type == SPORADIC) {
+            struct sporadic_constraints constr = {(s->constraints->sporadic.work)};
+            constraints->sporadic = constr;
+        }
+        d->constraints = constraints;
+        d->start_time = s->start_time;
+        d->run_time = s->run_time;
+        d->deadline = s->deadline;
+        d->exit_time = s->exit_time;
+        simulator->runnable->threads[i] = d;
+    }
+
+    simulator->aperiodic->size = scheduler->aperiodic->size;
+    for (i = 0; i < simulator->aperiodic->size; i++) {
+        rt_thread *s = scheduler->aperiodc->threads[i];
+        rt_thread_sim *d = (rt_thread_sim *)malloc(sizeof(rt_thread_sim));
+        d->type = s->type;
+        d->q_type = s->q_type;
+        d->status = s->status;
+
+        rt_constraints *constraints = (rt_constraints *)malloc(sizeof(rt_constraints));
+        struct aperiodic_constraints constr = {(s->constraints->aperiodic.priority)};
+        constraints->aperiodic = constr;
+
+        d->constraints = constraints;
+        d->start_time = s->start_time;
+        d->run_time = s->run_time;
+        d->deadline = s->deadline;
+        d->exit_time = s->exit_time;
+        simulator->aperiodic->threads[i] = d;
+    }
+
+    simulator->pending->size = scheduler->pending->size;
+    for (i = 0; i < simulator->pending->size; i++) {
+        rt_thread *s = scheduler->pending->threads[i];
+        rt_thread_sim *d = (rt_thread_sim *)malloc(sizeof(rt_thread_sim));
+        d->type = s->type;
+        d->q_type = s->q_type;
+        d->status = s->status;
+
+        rt_constraints *constraints = (rt_constraints *)malloc(sizeof(rt_constraints));
+        if (d->type == PERIODIC) {
+            struct periodic_constraints constr = {(s->constraints->periodic.period), (s->constraints->periodic.slice)};
+            constraints->periodic = constr;
+        } else if (d->type == SPORADIC) {
+            struct sporadic_constraints constr = {(s->constraints->sporadic.work)};
+            constraints->sporadic = constr;
+        }
+
+        d->constraints = constraints;
+        d->start_time = s->start_time;
+        d->run_time = s->run_time;
+        d->deadline = s->deadline;
+        d->exit_time = s->exit_time;
+        simulator->pending->threads[i] = d;
+    }
+}
+
+static void free_threads_sim(rt_simulator *simulator) {
+    int i = 0;
+    for (i = 0; i < simulator->runnable->size; i++) {
+        free(simulator->runnable->threads[i]->constraints);
+        free(simulator->runnable->threads[i]);
+    }
+    simulator->runnable->size = 0;
+
+    for (i = 0; i < simulator->aperiodic->size; i++) {
+        free(simulator->aperiodic->threads[i]->constraints);
+        free(simulator->aperiodic->threads[i]);
+    }
+    simulator->aperiodic->size = 0;
+
+    for (i = 0; i < simulator->pending->size; i++) {
+        free(simulator->pending->threads[i]->constraints);
+        free(simulator->pending->threads[i]);
+    }
+    simulator->pending->size = 0;
 }
 
 static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_sim *thread, uint64_t time)
