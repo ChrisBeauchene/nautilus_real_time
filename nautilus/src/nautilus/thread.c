@@ -1354,6 +1354,7 @@ __thread_fork (void)
     nk_thread_t *me = get_cur_thread();
     irq_enable_restore(flags);
 
+    int cpu = t->bound_cpu;
     if (me->rt_thread == NULL) {
         RT_THREAD_DEBUG("REAL-TIME FORK FAILED.\n");
         return 0;
@@ -1361,7 +1362,7 @@ __thread_fork (void)
     rt_thread *rt_parent = me->rt_thread;
     rt_thread *rt = rt_thread_init(rt_parent->type, rt_parent->constraints, rt_parent->deadline, tid);
     struct sys_info *sys = per_cpu_get(system);
-    if (sys->cpus[my_cpu_id()]->rt_sched)
+    if (sys->cpus[cpu]->rt_sched)
     {
         if (rt->type == APERIODIC) {
             enqueue_thread(sys->cpus[cpu]->rt_sched->aperiodic, rt);
