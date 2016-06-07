@@ -160,7 +160,7 @@ rt_scheduler* rt_scheduler_init(rt_thread *main_thread)
     rt_queue *arrival = (rt_queue *)malloc(sizeof(rt_queue) + MAX_QUEUE * sizeof(rt_thread *));
     rt_queue *waiting = (rt_queue *)malloc(sizeof(rt_queue) + MAX_QUEUE * sizeof(rt_thread *));
     scheduler->main_thread = main_thread;
-
+    scheduler->run_time = 1000000;
     if (!scheduler || !runnable || ! pending || !aperiodic || !arrival || !waiting) {
         RT_SCHED_ERROR("Could not allocate rt scheduler\n");
         return NULL;
