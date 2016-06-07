@@ -875,6 +875,6 @@ static inline void apic_loop(struct apic_dev *apic, apic_tsc *info) {
 
 static inline uint64_t get_tsc() {
     uint64_t hi, lo;
-    __asm__ __volatile ("rdtsc" : "=a"(lo), "=d"(hi));
+    __asm__ __volatile__ ("rdtsc" : "=a"(lo), "=d"(hi));
     return ((hi << 32) | lo);
 }

@@ -65,7 +65,7 @@
 #define WAITING_QUEUE 4
 #define MAX_QUEUE 256
 
-#define QUANTUM 100000000
+#define QUANTUM 100000000000
 
 typedef struct rt_thread_sim {
     rt_type type;
