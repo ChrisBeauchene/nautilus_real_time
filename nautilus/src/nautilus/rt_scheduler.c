@@ -100,7 +100,7 @@ static inline void update_periodic(rt_thread *t);
 static void set_timer(rt_scheduler *scheduler, rt_thread *thread);
 
 // Admission Control Functions
-static struct nk_thread *rt_need_resched_logic(rt_scheduler *scheduler, rt_thread *thread, uint64_t time);
+static nk_thread *rt_need_resched_logic(rt_scheduler *scheduler, rt_thread *thread, uint64_t time);
 static uint64_t set_timer_logic(rt_simulator *simulator, rt_thread_sim *thread, uint64_t time);
 static void enqueue_thread_logic(rt_queue_sim *queue, rt_thread_sim *thread);
 static rt_thread_sim* dequeue_thread_logic(rt_queue_sim *queue);
@@ -539,13 +539,13 @@ static rt_thread_sim* dequeue_thread_logic(rt_queue_sim *queue)
         return min;
     } else if (queue->type == APERIODIC_QUEUE)
     {
-        if (queue->size_sim < 1)
+        if (queue->size < 1)
         {
             RT_SCHED_ERROR("APERIODIC QUEUE EMPTY! CAN'T DEQUEUE!\n");
             return NULL;
         }
 
-        rt_thread *min, *last;
+        rt_thread_sim *min, *last;
         int now, child;
         
         min = queue->threads[0];
@@ -944,7 +944,7 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
     rt_scheduler *scheduler = sys->cpus[my_cpu_id()]->rt_sched;
     
     rt_constraints *constraints_first = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints per_constr_first = {sched_period, sched_slice_time, 0, 40};
+    struct periodic_constraints per_constr_first = {sched_period, sched_slice_time};
     constraints_first->periodic = per_constr_first;
 
     nk_thread_start((nk_thread_fun_t)sched_sim, (void *)scheduler, NULL, 0, 0, &sched, my_cpu_id(), APERIODIC, constraints_first, 0);
@@ -1109,27 +1109,27 @@ void nk_rt_test()
     
     
     rt_constraints *constraints_first = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints per_constr_first = {(10000000000), (10000000), 0, 40};
+    struct periodic_constraints per_constr_first = {(10000000000), (10000000)};
     constraints_first->periodic = per_constr_first;
     
     rt_constraints *constraints_second = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints per_constr_second = {(5000000000), (5000000), 0, 40};
+    struct periodic_constraints per_constr_second = {(5000000000), (5000000)};
     constraints_second->periodic = per_constr_second;
     
     rt_constraints *constraints_third = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints per_constr_third = {(250000000), (250000), 0, 40};
+    struct periodic_constraints per_constr_third = {(250000000), (250000)};
     constraints_third->periodic = per_constr_third;
     
     rt_constraints *constraints_fifth = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints per_constr_fifth = {(500000000), (5000000), 0, 40};
+    struct periodic_constraints per_constr_fifth = {(500000000), (5000000)};
     constraints_fifth->periodic = per_constr_fifth;
     
     rt_constraints *constraints_six = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints per_constr_six = {(5000000000), (5000000), 0, 40};
+    struct periodic_constraints per_constr_six = {(5000000000), (5000000)};
     constraints_six->periodic = per_constr_six;
     
     rt_constraints *constraints_seven = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints per_constr_seven = {(5000000000), (5000000), 0, 40};
+    struct periodic_constraints per_constr_seven = {(5000000000), (5000000)};
     constraints_seven->periodic = per_constr_seven;
     
     rt_constraints *constraints_fourth = (rt_constraints *)malloc(sizeof(rt_constraints));
@@ -1137,7 +1137,7 @@ void nk_rt_test()
     constraints_fourth->aperiodic = aper_constr;
     
     rt_constraints *constraints_eighth = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints per_constr_eighth = {(500000000000), (500000000), 0, 40};
+    struct periodic_constraints per_constr_eighth = {(500000000000), (500000000)};
     constraints_eighth->periodic = per_constr_eighth;
 
     uint64_t first = 1, second = 2, third = 3, fourth = 4, five = 5, six = 6, seven = 7, eight = 8;
