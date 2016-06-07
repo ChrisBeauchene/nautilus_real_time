@@ -109,8 +109,9 @@ static inline void update_enter_logic(rt_thread_sim *t, uint64_t time);
 static int check_deadlines_logic(rt_thread_sim *t, uint64_t time);
 static inline void update_periodic_logic(rt_thread_sim *t, uint64_t time);
 static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler);
-
 static void free_threads_sim(rt_simulator *simulator);
+
+static rt_thread* max_periodic(rt_scheduler *scheduler);
 
 static inline uint64_t get_min_per(rt_queue *runnable, rt_queue *queue, rt_thread *thread);
 static inline uint64_t get_avg_per(rt_queue *runnable, rt_queue *pending, rt_thread *thread);
@@ -160,7 +161,6 @@ rt_scheduler* rt_scheduler_init(rt_thread *main_thread)
     rt_queue *waiting = (rt_queue *)malloc(sizeof(rt_queue) + MAX_QUEUE * sizeof(rt_thread *));
     scheduler->main_thread = main_thread;
 
-    scheduler->run_time = 1000000;
     if (!scheduler || !runnable || ! pending || !aperiodic || !arrival || !waiting) {
         RT_SCHED_ERROR("Could not allocate rt scheduler\n");
         return NULL;
@@ -809,23 +809,12 @@ int rt_admit(rt_scheduler *scheduler, rt_thread *thread)
             RT_SCHED_ERROR("PERIODIC: Admission denied utilization factor overflow!\n");
             return 0;
         }
-        
-        if ((thread->constraints->periodic.period - scheduler->run_time) <= thread->constraints->periodic.slice)
-        {
-            RT_SCHED_ERROR("PERIODIC: Time to reach first deadline is unachievable. Denied.\n");
-            return 0;
-        }
     } else if (thread->type == SPORADIC)
     {
         uint64_t spor_util = get_spor_util(scheduler->runnable);
         
         if (spor_util > SPORADIC_UTIL) {
             RT_SCHED_DEBUG("SPORADIC: Admission denied utilization factor overflow!\n");
-            return 0;
-        }
-        
-        if (thread->constraints->sporadic.work > (thread->deadline - cur_time() - scheduler->run_time)) {
-            RT_SCHED_DEBUG("SPORADIC: Time to reach first deadline is unachievable. Denied.\n");
             return 0;
         }
     }
@@ -942,27 +931,60 @@ static void test_real_time(void *in)
 
 void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
     nk_thread_id_t sched;
-
-    struct sys_info *sys = per_cpu_get(system);
-    rt_scheduler *scheduler = sys->cpus[my_cpu_id()]->rt_sched;
     
     rt_constraints *constraints_first = (rt_constraints *)malloc(sizeof(rt_constraints));
     struct periodic_constraints per_constr_first = {sched_period, sched_slice_time};
     constraints_first->periodic = per_constr_first;
 
-    nk_thread_start((nk_thread_fun_t)sched_sim, (void *)scheduler, NULL, 0, 0, &sched, my_cpu_id(), PERIODIC, constraints_first, 0);
+    nk_thread_start_sim((nk_thread_fun_t)sched_sim, NULL, NULL, 0, 0, &sched, my_cpu_id(), PERIODIC, constraints_first, 0);
 }
 
 static void sched_sim(void *scheduler) {
-    rt_scheduler *sched = (rt_scheduler *)scheduler;
-    while (1) {
-        // dequeue from the arrival thread
-            // run admit on every function in the pending and runnable queues
-            // this will guarantee that we can enqueue 
-        udelay(100000);
-        printk("Inside Sim\n");
-    }
+    rt_simulator *sim = init_simulator();
 
+    struct sys_info *sys = per_cpu_get(system);
+    rt_scheduler *sched = sys->cpus[my_cpu_id()]->rt_sched;
+
+    while (1) {
+        rt_thread *new = dequeue_thread(sched->arrival);
+        if (new != NULL) {
+            int admission_check = rt_admit(sched, new);
+            if (admission_check) {
+                copy_threads_sim(sim, sched);
+
+                free_threads_sim(sim);
+            }
+            enqueue_thread(sched->arrival, new);
+        }
+    }
+}
+
+static rt_thread* max_periodic(rt_scheduler *scheduler) {
+    rt_queue *runnable = scheduler->runnable;
+    rt_queue *pending = scheduler->pending;
+    rt_thread *max_thread = NULL;  
+    uint64_t max_period = 0;
+    int i = 0;
+    for (i = 0; i < runnable->size; i++) {
+        rt_thread *thread = runnable->threads[i];
+        if (thread->type == PERIODIC) {
+            if (thread->constraints->periodic.period > max_period) {
+                max_period = thread->constraints->periodic.period;
+                max_thread = thread;
+            }
+        }
+    }
+    
+    for (i = 0; i < pending->size; i++) {
+        rt_thread *thread = pending->threads[i];
+        if (thread->type == PERIODIC) {
+            if (thread->constraints->periodic.period > max_period) {
+                max_period = thread->constraints->periodic.period;
+                max_thread = thread;
+            }
+        }
+    }
+    return max_thread;
 }
 
 static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler) {

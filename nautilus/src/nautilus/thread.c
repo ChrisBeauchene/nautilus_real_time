@@ -1707,7 +1707,71 @@ out_err:
     free(keys);
 }
 
-                
+int
+nk_thread_start_sim (nk_thread_fun_t fun,
+                 void *input,
+                 void **output,
+                 uint8_t is_detached,
+                 nk_stack_size_t stack_size,
+                 nk_thread_id_t *tid,
+                 int cpu,
+                 int rt_type,
+                 rt_constraints *rt_constraints,
+                 uint64_t rt_deadline)
+
+{
+    nk_thread_id_t newtid   = NULL;
+    nk_thread_t * newthread = NULL;
+    
+    /* put it on the current CPU */
+    if (cpu == CPU_ANY) {
+        cpu = my_cpu_id();
+    }
+    
+    if (nk_thread_create(fun, input, output, is_detached, stack_size, &newtid, cpu) < 0) {
+        ERROR_PRINT("Could not create thread\n");
+        return -1;
+    }
+    
+    newthread = (nk_thread_t*)newtid;
+    
+    if (tid) {
+        *tid = newtid;
+    }
+    
+    thread_setup_init_stack(newthread, fun, input);
+
+#ifdef NAUT_CONFIG_USE_RT_SCHEDULER
+    rt_thread *rt = rt_thread_init(rt_type, rt_constraints, rt_deadline, newthread);
+    struct sys_info *sys = per_cpu_get(system);
+    if (sys->cpus[cpu]->rt_sched) {
+        enqueue_thread(sys->cpus[cpu]->rt_sched->runnable, rt);
+    }
+    nk_schedule();
+#else
+    nk_enqueue_thread_on_runq(newthread, cpu);
+#endif
+    
+    
+#ifdef NAUT_CONFIG_DEBUG_THREADS
+    if (cpu == CPU_ANY) {
+        SCHED_DEBUG("Started thread (%p, tid=%u) on [ANY CPU]\n", newthread, newthread->tid);
+    } else {
+        SCHED_DEBUG("Started thread (%p, tid=%u) on cpu %u\n", newthread, newthread->tid, cpu);
+    }
+#endif
+    
+#ifdef NAUT_CONFIG_KICK_SCHEDULE
+    // kick it
+    if (cpu != my_cpu_id()) {
+        apic_ipi(per_cpu_get(apic),
+                 nk_get_nautilus_info()->sys.cpus[cpu]->lapic_id,
+                 APIC_NULL_KICK_VEC);
+    }
+#endif
+    
+    return 0;
+}
 
 
 
