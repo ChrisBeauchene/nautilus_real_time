@@ -614,7 +614,7 @@ static void set_timer(rt_scheduler *scheduler, rt_thread *current_thread, uint64
     } else if (scheduler->pending->size == 0 && current_thread) {
         if (current_thread->type == PERIODIC)
         {
-            apic_oneshot_write(apic, (current_thread->constraints->periodic.slice - current_thread->run_time) + slack;
+            apic_oneshot_write(apic, (current_thread->constraints->periodic.slice - current_thread->run_time) + slack);
             scheduler->tsc->set_time = (current_thread->constraints->periodic.slice - current_thread->run_time) + slack;
         } else if (current_thread->type == SPORADIC)
         {
