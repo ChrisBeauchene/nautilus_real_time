@@ -956,6 +956,7 @@ static void sched_sim(void *scheduler) {
             }
             enqueue_thread(sched->arrival, new);
         }
+        enqueue_thread(sched->arrival, new);
     }
 }
 
