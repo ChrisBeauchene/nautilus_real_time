@@ -323,13 +323,15 @@ init (unsigned long mbd,
     /* interrupts on */
     sti();
     calibrate_apic(naut->sys.cpus[0]->apic);
+
+    runtime_init();
     
 #ifdef NAUT_CONFIG_USE_RT_SCHEDULER
     printk("BEGIN TESTING THE REAL-TIME SCHEDULER\n");
     rt_start(10000, 100000);
 #endif
-    runtime_init();
     
+
     while (1) {
         udelay(100000);
         printk("Inside init\n");
@@ -338,9 +340,6 @@ init (unsigned long mbd,
 
     // start_shell();
 
-    
-    
-    
     // printk("Nautilus boot thread yielding (indefinitely)\n");
     
     // /* we don't come back from this */

@@ -602,11 +602,7 @@ int rt_admit(rt_scheduler *scheduler, rt_thread *thread)
 {
     if (thread->type == PERIODIC)
     {
-        uint64_t min_period = (get_min_per(scheduler->runnable, scheduler->pending, thread) / 2);
-        uint64_t sched_util= (scheduler->run_time * 100000) / min_period;
-        printk("SCHEDULER UTILITY =  \t%llu\n", sched_util);
-        uint64_t per_util = get_per_util(scheduler->runnable, scheduler->pending) + sched_util;
-        
+        uint64_t per_util = get_per_util(scheduler->runnable, scheduler->pending);
         printk("UTIL FACTOR =  \t%llu\n", per_util);
         
         if ((per_util + (thread->constraints->periodic.slice * 100000) / thread->constraints->periodic.period) > PERIODIC_UTIL) {
@@ -740,10 +736,7 @@ static void test_real_time(void *in)
 {
     while (1)
     {
-        //	uint64_t start_time = rdtsc();
         udelay(1000000);
-        //	uint64_t end_time = rdtsc();
-        //	printk("IN TID: %d with frequency of %llu\n", (uint64_t)in, end_time - start_time);
     }
 }
 
@@ -762,8 +755,9 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
 
 static void sched_sim(void *scheduler) {
     while (1) {
-        udelay(100000);
-        printk("Sched sim\n");
+        // dequeue from the arrival thread
+            // run admit on every function in the pending and runnable queues
+            // this will guarantee that we can enqueue 
     }
 
 }
