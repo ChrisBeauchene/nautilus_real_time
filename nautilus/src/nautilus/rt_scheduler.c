@@ -760,6 +760,7 @@ struct nk_thread *rt_need_resched()
 
 static inline void update_exit(rt_thread *t)
 {
+    t->exit_time = cur_time();
     t->run_time += (t->exit_time - t->start_time);
 }
 
