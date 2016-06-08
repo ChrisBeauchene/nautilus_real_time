@@ -49,9 +49,9 @@
 #define PERIODIC 2
 
 // UTILIZATION FACTOR LIMITS
-#define PERIODIC_UTIL 70000
-#define SPORADIC_UTIL 20000
-#define APERIODIC_UTIL 10000
+#define PERIODIC_UTIL 65000
+#define SPORADIC_UTIL 18000
+#define APERIODIC_UTIL 9000
 
 #define ARRIVED 0
 #define ADMITTED 1
@@ -65,7 +65,7 @@
 #define WAITING_QUEUE 4
 #define MAX_QUEUE 256
 
-#define QUANTUM 1000000000
+#define QUANTUM 10000000
 
 typedef struct rt_thread_sim {
     rt_type type;
@@ -92,9 +92,17 @@ typedef struct rt_simulator {
 
 static rt_simulator* init_simulator();
 
-// Switching thread functions
-static inline void update_exit(rt_thread *t);
-static inline void update_enter(rt_thread *t);
+// Switching thread function
+/*static inline void update_exit(rt_thread *t)
+{
+    t->exit_time = cur_time();
+    t->run_time += (t->exit_time - t->start_time);
+}
+
+static inline void update_enter(rt_thread *t)
+{
+    t->start_time = cur_time();
+}*/
 static int check_deadlines(rt_thread *t);
 static inline void update_periodic(rt_thread *t);
 static void set_timer(rt_scheduler *scheduler, rt_thread *thread, uint64_t end_time, uint64_t slack);
@@ -201,7 +209,8 @@ rt_scheduler* rt_scheduler_init(rt_thread *main_thread)
         waiting->head = 0;
         waiting->tail = 0;
         scheduler->waiting = waiting;
-
+		
+			
         scheduler->tsc = info;
 
     }
@@ -597,8 +606,7 @@ void rt_thread_dump(rt_thread *thread)
     
     if (thread->type == PERIODIC)
     {
-        RT_SCHED_DEBUG("Slice: %llu\t\t Period: %llu\t\t\n", thread->constraints->periodic.slice, thread->constraints->periodic.period);
-        RT_SCHED_DEBUG("Utilization contribution: %lluu\n\n", (thread->constraints->periodic.slice * 100000) / thread->constraints->periodic.period);
+		printk("START TIME: %llu\t\tRUN TIME: %llu\t\tEXIT TIME: %llu\nDEADLINE: %llu\t\tCURRENT TIME: %llu\n", thread->start_time, thread->run_time, thread->exit_time, thread->deadline, cur_time() );
     } else if (thread->type == SPORADIC)
     {
         RT_SCHED_DEBUG("Work: %llu\t\t", thread->constraints->sporadic.work);
@@ -646,6 +654,7 @@ static void set_timer(rt_scheduler *scheduler, rt_thread *current_thread, uint64
         apic_oneshot_write(apic, QUANTUM);
         scheduler->tsc->set_time = QUANTUM;
     }
+	scheduler->tsc->end_time = end_time;
 }
 
 
@@ -657,9 +666,6 @@ struct nk_thread *rt_need_resched()
     struct nk_thread *c = get_cur_thread();
     rt_thread *rt_c = c->rt_thread;
     
-    if (rt_c) {
-        update_exit(rt_c);
-    }
     
     uint64_t end_time = scheduler->run_time + cur_time();
     uint64_t slack = 0;
@@ -689,7 +695,6 @@ struct nk_thread *rt_need_resched()
             {
                 enqueue_thread(scheduler->aperiodic, rt_c);
                 rt_n = dequeue_thread(scheduler->runnable);
-                update_enter(rt_n);
                 set_timer(scheduler, rt_n, end_time, slack);
                 return rt_n->thread;
             }
@@ -706,7 +711,6 @@ struct nk_thread *rt_need_resched()
                 {
                     rt_n = dequeue_thread(scheduler->runnable);
                     enqueue_thread(scheduler->runnable, rt_c);
-                    update_enter(rt_n);
                     set_timer(scheduler, rt_n, end_time, slack);
                     return rt_n->thread;
                 } else
@@ -715,7 +719,6 @@ struct nk_thread *rt_need_resched()
                     {
                         check_deadlines(rt_c);
                         rt_n = dequeue_thread(scheduler->runnable);
-                        update_enter(rt_n);
                         set_timer(scheduler, rt_n, end_time, slack);
                         return rt_n->thread;
                     }
@@ -724,12 +727,10 @@ struct nk_thread *rt_need_resched()
             
             if (rt_c->run_time <= rt_c->constraints->sporadic.work)
             {
-                update_enter(rt_c);
                 set_timer(scheduler, rt_c, end_time, slack);
                 return rt_c->thread;
             }
             rt_n = dequeue_thread(scheduler->aperiodic);
-            update_enter(rt_n);
             set_timer(scheduler, rt_n, end_time, slack);
             return rt_n->thread;
             break;
@@ -745,7 +746,6 @@ struct nk_thread *rt_need_resched()
 
                 if (scheduler->runnable->size > 0) {
                     rt_n = dequeue_thread(scheduler->runnable);
-                    update_enter(rt_n);
                     set_timer(scheduler, rt_n, end_time, slack);
                     return rt_n->thread;
                 }
@@ -759,43 +759,31 @@ struct nk_thread *rt_need_resched()
                     if (rt_c->deadline > scheduler->runnable->threads[0]->deadline) {
                         rt_n = dequeue_thread(scheduler->runnable);
                         enqueue_thread(scheduler->runnable, rt_c);
-                        update_enter(rt_n);
                         set_timer(scheduler, rt_n, end_time, slack);
                         return rt_n->thread;
                     }
                 }
             }
-            update_enter(rt_c);
             set_timer(scheduler, rt_c, end_time, slack);
             return rt_c->thread;
             break;
         default:
-            update_enter(rt_c);
             set_timer(scheduler, rt_c, end_time, slack);
             return c;
     }
     
 }
 
-static inline void update_exit(rt_thread *t)
-{
-    t->exit_time = cur_time();
-    t->run_time += (t->exit_time - t->start_time);
-}
 
-static inline void update_enter(rt_thread *t)
-{
-    t->start_time = cur_time();
-}
 
 static int check_deadlines(rt_thread *t)
 {
-    if (cur_time() > t->deadline) {
+	rt_thread_dump(t);
+    if (t->exit_time > t->deadline) {
         RT_SCHED_ERROR("Missed Deadline = %llu\t\t Current Timer = %llu\n", t->deadline, t->exit_time);
         RT_SCHED_ERROR("Difference =  %llu\n", t->exit_time - t->deadline);
-        return 1;
+		return 1;
     }
-    
     return 0;
 }
 
@@ -956,7 +944,11 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
 }
 
 static void sched_sim(void *scheduler) {
-    rt_simulator *sim = init_simulator();
+	while (1) {
+		printk("Running the scheduler on core %d\n", my_cpu_id());
+		udelay(100000);
+	}
+	rt_simulator *sim = init_simulator();
 
     struct sys_info *sys = per_cpu_get(system);
     rt_scheduler *sched = sys->cpus[my_cpu_id()]->rt_sched;

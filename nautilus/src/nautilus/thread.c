@@ -72,6 +72,17 @@ extern void nk_thread_switch(nk_thread_t*);
 extern void nk_thread_entry(void *);
 static struct nk_tls tls_keys[TLS_MAX_KEYS];
 
+static inline void update_exit(rt_thread *t);
+static inline void update_enter(rt_thread *t);
+
+static inline void update_exit(rt_thread *t) {
+	t->exit_time = rdtsc();
+	t->run_time += (t->exit_time - t->start_time);
+}
+
+static inline void update_enter(rt_thread *t) {
+	t->start_time = rdtsc();
+}
 
 /****** SEE BELOW FOR EXTERNAL THREAD INTERFACE ********/
 
@@ -1401,12 +1412,16 @@ nk_need_resched (void)
 {
     uint64_t start_time = rdtsc();
     ASSERT(!irqs_enabled());
-    nk_thread_t * thread = rt_need_resched();
+	nk_thread_t * current = get_cur_thread();
+    update_exit(current->rt_thread);
+	nk_thread_t * thread = rt_need_resched();
+    struct sys_info *sys = per_cpu_get(system);
+	rt_scheduler *sched = sys->cpus[thread->bound_cpu]->rt_sched; 
     uint64_t end_time = rdtsc();
-    struct sys_info * sys = per_cpu_get(system);
-    sys->cpus[thread->bound_cpu]->rt_sched->run_time = (sys->cpus[thread->bound_cpu]->rt_sched->run_time > (end_time - start_time)) ? sys->cpus[thread->bound_cpu]->rt_sched->run_time : (end_time - start_time);
-    printk("Scheduler run time is %llu\n", sys->cpus[thread->bound_cpu]->rt_sched->run_time);
-    return thread;
+	sched->run_time = sched->run_time > (end_time - start_time) ? sched->run_time : (end_time - start_time);
+    while (rdtsc() < sched->tsc->end_time); 
+	update_enter(thread->rt_thread);
+	return thread;
 }
 #endif
 
