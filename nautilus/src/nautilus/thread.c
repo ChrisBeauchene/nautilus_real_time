@@ -771,6 +771,7 @@ nk_wake_waiters (void)
  */
 void
 nk_thread_exit (void * retval)
+#ifndef NAUT_CONFIG_USE_RT_SCHEDULER
 {
     nk_thread_t * me = get_cur_thread();
     
@@ -801,6 +802,19 @@ nk_thread_exit (void * retval)
     /* we should never get here! */
     panic("Should never get here!\n");
 }
+#else
+{
+    nk_thread_t * me = get_cur_thread();
+    rt_thread *rt = me->rt_thread;
+
+    tls_exit();
+    nk_wake_waiters();
+    
+    rt_thread_exit(rt);
+    while (rt->status != REMOVED);
+    nk_schedule();
+}
+#endif
 
 
 /*

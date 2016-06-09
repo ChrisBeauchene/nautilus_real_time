@@ -119,7 +119,6 @@ static inline uint64_t umin(uint64_t x, uint64_t y);
 
 static rt_list* rt_list_init();
 static rt_node* rt_node_init(rt_thread *t);
-static int rt_list_empty(rt_list *l);
 
 static void sched_sim(void *scheduler);
 
@@ -171,7 +170,7 @@ static rt_node* rt_node_init(rt_thread *t) {
     return node;
 }
 
-static int rt_list_empty(rt_list *l) {
+int rt_list_empty(rt_list *l) {
     return (l->head == NULL);
 }
 
@@ -252,8 +251,10 @@ void wake_up(rt_thread *A, rt_thread *B) {
         if (A->status == TOBE_REMOVED || A->status == REMOVED) return;
 
         list_remove(sched->sleeping, A);
-        A->status = ARRIVED;
-        list_enqueue(sched->arrival, A);
+        if (A->status != TOBO_REMOVED && A->status != REMOVED) {
+            A->status = ARRIVED;
+            list_enqueue(sched->arrival, A);
+        }
     }
 }
 
