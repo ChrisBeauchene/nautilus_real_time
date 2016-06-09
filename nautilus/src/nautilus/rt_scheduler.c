@@ -249,16 +249,11 @@ void wake_up(rt_thread *A, rt_thread *B) {
     if (rt_list_empty(A->waiting)) {
         struct sys_info *sys = per_cpu_get(system);
         rt_scheduler *sched = sys->cpus[my_cpu_id()]->rt_sched;
-        if (A->status == REMOVED) return;
+        if (A->status == TOBE_REMOVED || A->status == REMOVED) return;
 
         list_remove(sched->sleeping, A);
-        if (A->type == APERIODIC) {
-            A->status = ADMITTED;
-            enqueue_thread(sched->aperiodic, A);
-        } else {
-            A->status = ARRIVED;
-            list_enqueue(sched->arrival, A);
-        }
+        A->status = ARRIVED;
+        list_enqueue(sched->arrival, A);
     }
 }
 
@@ -1180,22 +1175,29 @@ static void sched_sim(void *scheduler) {
     while (1) {
         rt_thread *new = list_dequeue(sched->arrival);
         if (new != NULL) {
-            int admission_check = rt_admit(sched, new);
-            if (admission_check) {
-                copy_threads_sim(sim, sched);
-                free_threads_sim(sim);
+
+            if (new->type == APERIODIC) {
+                enqueue_thread(sched->aperiodic, new);
+            } else {
+
+                int admission_check = rt_admit(sched, new);
+                if (admission_check) {
+                    copy_threads_sim(sim, sched);
+                    // ENQUEUE THREAD HERE
+                    free_threads_sim(sim);
+                }
             }
-            list_enqueue(sched->arrival, new);
         }
 
         rt_thread *d = list_dequeue(sched->exited);
         while (d != NULL) {
             rt_thread *e = NULL;
             if (d->status == ADMITTED) {
-                d->status = REMOVED;
+                d->status = TOBE_REMOVED;
                 e = remove_thread(d); 
+
             } else if (d->status == SLEEPING) {
-                d->status = REMOVED;
+                d->status = TOBE_REMOVED;
                 e = list_remove(sched->sleeping, d);
             }
 
