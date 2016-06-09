@@ -119,7 +119,7 @@ static inline uint64_t umin(uint64_t x, uint64_t y);
 
 static rt_list* rt_list_init();
 static rt_node* rt_node_init(rt_thread *t);
-static int list_empty(rt_list *l);
+static int rt_list_empty(rt_list *l);
 
 static void sched_sim(void *scheduler);
 
@@ -171,7 +171,7 @@ static rt_node* rt_node_init(rt_thread *t) {
     return node;
 }
 
-static int list_empty(rt_list *l) {
+static int rt_list_empty(rt_list *l) {
     return (l->head == NULL);
 }
 
@@ -246,7 +246,7 @@ void wake_up(rt_thread *A, rt_thread *B) {
     list_remove(A->waiting, B);
     list_remove(B->holding, A);
 
-    if (list_empty(A->waiting)) {
+    if (rt_list_empty(A->waiting)) {
         struct sys_info *sys = per_cpu_get(system);
         rt_scheduler *sched = sys->cpus[my_cpu_id()]->rt_sched;
         if (A->status == REMOVED) return;
@@ -264,7 +264,7 @@ void wake_up(rt_thread *A, rt_thread *B) {
 
 void wake_up_all(rt_thread *A) {
     rt_thread *woke = list_dequeue(A->holding);
-    
+
     while (woke != NULL) {
         wake_up(woke, A);
         woke = list_dequeue(A->holding);
