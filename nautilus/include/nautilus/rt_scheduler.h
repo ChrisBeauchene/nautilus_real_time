@@ -35,11 +35,11 @@ typedef enum { ARRIVED = 0, ADMITTED = 1, WAITING = 2} rt_status;
 typedef enum { WAITING_LIST = 0, HOLDING_LIST = 1} list_type;
 
 struct rt_thread;
-struct rt_node {
+typedef struct rt_node {
     struct rt_thread *thread;
     struct rt_node *next;
     struct rt_node *prev;
-};
+} rt_node;
 
 typedef struct rt_list {
     rt_node *head;
