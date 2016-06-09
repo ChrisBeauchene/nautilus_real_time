@@ -35,6 +35,7 @@ typedef enum { ARRIVED = 0, ADMITTED = 1, WAITING = 2} rt_status;
 typedef enum { WAITING_LIST = 0, HOLDING_LIST = 1} list_type;
 
 struct rt_thread;
+
 typedef struct rt_node {
     struct rt_thread *thread;
     struct rt_node *next;
@@ -104,18 +105,12 @@ rt_thread* dequeue_thread(rt_queue *queue);
 
 void rt_thread_dump(rt_thread *thread);
 
-// Time
 uint64_t cur_time();
-
-/*
- nk_thread_t * nk_rt_need_resched();
- */
-
-/* ADMISSION CONTROL */
-
 
 
 int rt_admit(rt_scheduler *scheduler, rt_thread *thread);
+void wait_on(rt_thread *A, rt_thread *B);
+void wake_up(rt_thread *A, rt_thread *B);
 
 
 

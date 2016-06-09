@@ -114,6 +114,13 @@ static inline uint64_t get_per_util(rt_queue *runnable, rt_queue *pending);
 static inline uint64_t get_spor_util(rt_queue *runnable);
 static inline uint64_t umin(uint64_t x, uint64_t y);
 
+static rt_list* rt_list_init();
+static rt_node* rt_node_init(rt_thread *t);
+
+static void list_enqueue(rt_list *l, rt_thread *t);
+static rt_thread* list_dequeue(rt_list *l);
+static rt_thread* list_remove(rt_list *l, rt_thread *t);
+
 static void sched_sim(void *scheduler);
 
 rt_thread* rt_thread_init(int type,
@@ -130,6 +137,9 @@ rt_thread* rt_thread_init(int type,
     t->run_time = 0;
     t->deadline = 0;
 
+    t->holding = rt_list_init();
+    t->waiting = rt_list_init();
+
     if (type == PERIODIC)
     {
         t->deadline = cur_time() + constraints->periodic.period;
@@ -141,6 +151,91 @@ rt_thread* rt_thread_init(int type,
     thread->rt_thread = t;
     t->thread = thread;
     return t;
+}
+
+static rt_list* rt_list_init() {
+    rt_list *list = (rt_list *)malloc(sizeof(rt_list));
+    list->head = NULL;
+    list->tail = NULL;
+    return list;
+}
+
+static rt_node* rt_node_init(rt_thread *t) {
+    rt_node *node = (rt_node *)malloc(sizeof(rt_node));
+    node->thread = t;
+    node->next = NULL;
+    node->prev = NULL;
+    return rt_node;
+}
+
+static void list_enqueue(rt_list *l, rt_thread *t) {
+    if (l == NULL) {
+        RT_SCHED_ERROR("RT_LIST IS UNINITIALIZED.\n");
+        return;
+    }
+
+    if (l->head == NULL) {
+        l->head = rt_node_init(t);
+        l->tail = l->head;
+        return;
+    }
+
+    rt_node *n = l->tail;
+    l->tail = rt_node_init(t);
+    l->tail->prev = n;
+    n->next = l->tail;
+}
+static rt_thread* list_dequeue(rt_list *l) {
+    if (l == NULL) {
+        RT_SCHED_ERROR("RT_LIST IS UNINITIALIZED.\n");
+        return;
+    }
+
+    if (l->head == NULL) {
+        RT_SCHED_ERROR("RT_LIST IS EMPTY");
+        return;
+    }
+
+    rt_node *n = l->head;
+    l->head = n->next;
+    l->head->prev = NULL;
+    n->next = NULL;
+    n->prev = NULL;
+    return n->thread;
+}
+
+static rt_thread* list_remove(rt_list *l, rt_thread *t) {
+    rt_node *n = l->head;
+    while (n != NULL) {
+        if (n->thread == t) {
+            rt_node *tmp = n->next;
+            if (n->next != NULL) {
+                n->next->prev = n->prev;
+            }
+            if (n->prev != NULL) {
+                n->prev->next = tmp;
+            }
+            n->next = NULL;
+            n->prev = NULL;
+            return n->thread;
+        }
+    }
+    return NULL;
+}
+
+
+// B goes on A's waiting Q
+// A goes on B's holding Q
+
+void wait_on(rt_thread *A, rt_thread *B) {
+
+}
+
+// Remove B from A's waiting Q
+// Remove A from B's holding Q
+
+void wake_up(rt_thread *A, rt_thread *B) {
+
 }
 
 rt_scheduler* rt_scheduler_init(rt_thread *main_thread)
@@ -179,7 +274,8 @@ rt_scheduler* rt_scheduler_init(rt_thread *main_thread)
         aperiodic->size = 0;
         scheduler->aperiodic = aperiodic;
 		
-			
+		scheduler->arrival = rt_list_init();
+        scheduler->exited = rt_list_init();
         scheduler->tsc = info;
 
     }
@@ -880,25 +976,25 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
 }
 
 static void sched_sim(void *scheduler) {
-	while (1) {
-		printk("Running the scheduler on core %d\n", my_cpu_id());
-		udelay(100000);
-	}
+	// while (1) {
+	// 	printk("Running the scheduler on core %d\n", my_cpu_id());
+	// 	udelay(100000);
+	// }
+    
 	rt_simulator *sim = init_simulator();
 
     struct sys_info *sys = per_cpu_get(system);
     rt_scheduler *sched = sys->cpus[my_cpu_id()]->rt_sched;
 
     while (1) {
-        rt_thread *new = dequeue_thread(sched->arrival);
+        rt_thread *new = list_dequeue(sched->arrival);
         if (new != NULL) {
             int admission_check = rt_admit(sched, new);
             if (admission_check) {
                 copy_threads_sim(sim, sched);
-
                 free_threads_sim(sim);
             }
-            enqueue_thread(sched->arrival, new);
+            list_enqueue(sched->arrival, new);
         }
     }
 }
