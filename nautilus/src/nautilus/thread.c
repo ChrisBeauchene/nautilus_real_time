@@ -653,7 +653,7 @@ nk_thread_start (nk_thread_fun_t fun,
 
 #ifdef NAUT_CONFIG_USE_RT_SCHEDULER
     rt_thread *rt = rt_thread_init(rt_type, rt_constraints, rt_deadline, newthread);
-    nk_thread *parent = get_cur_thread();
+    nk_thread_t *parent = get_cur_thread();
     if (parent != NULL) {
         rt->parent = parent->rt_thread;
 
@@ -747,7 +747,7 @@ void
 nk_wake_waiters (void)
 {
     nk_thread_t * me  = get_cur_thread();
-    
+
     #ifndef NAUT_CONFIG_USE_RT_SCHEDULER
         nk_thread_queue_wake_all(me->waitq);
     #else
