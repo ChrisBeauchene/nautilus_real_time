@@ -188,12 +188,12 @@ static void list_enqueue(rt_list *l, rt_thread *t) {
 static rt_thread* list_dequeue(rt_list *l) {
     if (l == NULL) {
         RT_SCHED_ERROR("RT_LIST IS UNINITIALIZED.\n");
-        return;
+        return NULL;
     }
 
     if (l->head == NULL) {
         RT_SCHED_ERROR("RT_LIST IS EMPTY");
-        return;
+        return NULL;
     }
 
     rt_node *n = l->head;
@@ -980,7 +980,7 @@ static void sched_sim(void *scheduler) {
 	// 	printk("Running the scheduler on core %d\n", my_cpu_id());
 	// 	udelay(100000);
 	// }
-    
+
 	rt_simulator *sim = init_simulator();
 
     struct sys_info *sys = per_cpu_get(system);
