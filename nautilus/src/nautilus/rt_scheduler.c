@@ -117,8 +117,7 @@ static inline uint64_t umin(uint64_t x, uint64_t y);
 static rt_list* rt_list_init();
 static rt_node* rt_node_init(rt_thread *t);
 
-static void list_enqueue(rt_list *l, rt_thread *t);
-static rt_thread* list_dequeue(rt_list *l);
+
 static rt_thread* list_remove(rt_list *l, rt_thread *t);
 
 static void sched_sim(void *scheduler);
@@ -168,7 +167,7 @@ static rt_node* rt_node_init(rt_thread *t) {
     return node;
 }
 
-static void list_enqueue(rt_list *l, rt_thread *t) {
+void list_enqueue(rt_list *l, rt_thread *t) {
     if (l == NULL) {
         RT_SCHED_ERROR("RT_LIST IS UNINITIALIZED.\n");
         return;
@@ -185,7 +184,7 @@ static void list_enqueue(rt_list *l, rt_thread *t) {
     l->tail->prev = n;
     n->next = l->tail;
 }
-static rt_thread* list_dequeue(rt_list *l) {
+rt_thread* list_dequeue(rt_list *l) {
     if (l == NULL) {
         RT_SCHED_ERROR("RT_LIST IS UNINITIALIZED.\n");
         return NULL;

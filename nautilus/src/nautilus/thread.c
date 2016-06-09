@@ -651,7 +651,7 @@ nk_thread_start (nk_thread_fun_t fun,
         if (rt_type == APERIODIC) {
             enqueue_thread(sys->cpus[cpu]->rt_sched->aperiodic, rt);
         } else {
-            enqueue_thread(sys->cpus[cpu]->rt_sched->arrival, rt);
+            list_enqueue(sys->cpus[cpu]->rt_sched->arrival, rt);
         }
     }
 
@@ -1379,7 +1379,7 @@ __thread_fork (void)
         if (rt->type == APERIODIC) {
             enqueue_thread(sys->cpus[cpu]->rt_sched->aperiodic, rt);
         } else {
-            enqueue_thread(sys->cpus[cpu]->rt_sched->arrival, rt);  
+            list_enqueue(sys->cpus[cpu]->rt_sched->arrival, rt);  
         }
     }
 
