@@ -61,7 +61,7 @@ typedef struct rt_thread {
     rt_list *holding;
     rt_list *waiting;
 
-    rt_thread *parent;
+    struct rt_thread *parent;
     rt_list *children;
 
 } rt_thread;

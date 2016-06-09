@@ -84,7 +84,6 @@ static inline void update_enter(rt_thread *t) {
 	t->start_time = rdtsc();
 }
 
-/****** SEE BELOW FOR EXTERNAL THREAD INTERFACE ********/
 
 
 nk_thread_queue_t*
