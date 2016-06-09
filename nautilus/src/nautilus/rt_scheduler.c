@@ -135,9 +135,12 @@ rt_thread* rt_thread_init(int type,
     t->start_time = 0;
     t->run_time = 0;
     t->deadline = 0;
+    t->parent = NULL;
+
 
     t->holding = rt_list_init();
     t->waiting = rt_list_init();
+    t->children = rt_list_init();
 
     if (type == PERIODIC)
     {
@@ -227,14 +230,16 @@ static rt_thread* list_remove(rt_list *l, rt_thread *t) {
 // A goes on B's holding Q
 
 void wait_on(rt_thread *A, rt_thread *B) {
-
+    list_enqueue(A->waiting, B);
+    list_enqueue(B->holding, A);
 }
 
 // Remove B from A's waiting Q
 // Remove A from B's holding Q
 
 void wake_up(rt_thread *A, rt_thread *B) {
-
+    list_remove(A->waiting, B);
+    list_remove(B->holding, A);
 }
 
 rt_scheduler* rt_scheduler_init(rt_thread *main_thread)
