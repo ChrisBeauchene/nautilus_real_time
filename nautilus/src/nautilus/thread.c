@@ -809,10 +809,10 @@ nk_thread_exit (void * retval)
 
     tls_exit();
     nk_wake_waiters();
-    
+
     rt_thread_exit(rt);
     while (rt->status != REMOVED);
-    nk_schedule();
+
 }
 #endif
 
@@ -832,8 +832,12 @@ nk_thread_destroy (nk_thread_id_t t)
     nk_thread_t * thethread = (nk_thread_t*)t;
     
     SCHED_DEBUG("Destroying thread (%p, tid=%lu)\n", (void*)thethread, thethread->tid);
-    
+
+    nk_thread_exit();
+
+#ifndef NAUT_CONFIG_USE_RT_SCHEDULER
     ASSERT(!irqs_enabled());
+#endif
     
     nk_dequeue_thread_from_runq(thethread);
     dequeue_thread_from_tlist(thethread);
@@ -847,7 +851,9 @@ nk_thread_destroy (nk_thread_id_t t)
     
     free(thethread->stack);
     free(thethread);
+
 }
+
 
 
 /*
@@ -902,6 +908,8 @@ out:
 }
 #else
 {
+    nk_thread_t *thethread = (nk_thread_t*)t;
+    thread_detach(thethread);
     return 0;
 }
 #endif
@@ -922,6 +930,7 @@ out:
  */
 int
 nk_join_all_children (int (*func)(void * res))
+#ifndef NAUT_CONFIG_USE_RT_SCHEDULER
 {
     nk_thread_t * elm = NULL;
     nk_thread_t * tmp = NULL;
@@ -949,6 +958,11 @@ nk_join_all_children (int (*func)(void * res))
     
     return ret;
 }
+#else
+{
+    return 
+}
+#endif
 
 
 /*
@@ -977,8 +991,10 @@ nk_wait (nk_thread_id_t t)
     nk_schedule();
 }
 #else
-{
-
+{   
+    nk_thread_t * cur = get_cur_thread();
+    rt_thread *rt = cur->rt_thread;
+    sleep_on_queue(rt);
 }
 #endif
 
@@ -1024,13 +1040,16 @@ nk_yield (void)
 #else
 {
 
-    // Dequeue aperiodic 
-        // Enqueue current queue
-    // Else if hard real-time
-        // Dequeue run queue
-        // enqueue current queue on arrival queue
-    // Switch to new queue
-    // nk_thread_switch()
+    struct sys_info *sys = per_cpu_get(system);
+    rt_scheduler *sched = sys->cpus[my_cpu_id()]->rt_sched;
+    nk_thread_t * me = get_cur_thread();
+    rt_thread *rt = me->rt_thread;
+
+    rt_thread_exit(rt);
+    while (rt->status != REMOVED);      
+    rt->type = ARRIVED;
+    enqueue_thread(sched->arrival, rt);
+    nk_schedule();
 }
 #endif
 
@@ -1057,6 +1076,7 @@ nk_set_thread_fork_output (void * result)
  * @q: the thread queue to sleep on
  *
  */
+
 int
 nk_thread_queue_sleep (nk_thread_queue_t * q)
 {
@@ -1068,6 +1088,21 @@ nk_thread_queue_sleep (nk_thread_queue_t * q)
     irq_enable_restore(flags);
     return 0;
 }
+
+#ifdef NAUT_CONFIG_USE_RT_SCHEDULER
+int sleep_on_queue(rt_thread *sleep) {
+    struct sys_info *sys = per_cpu_get(system);
+    rt_scheduler *sched = sys->cpus[my_cpu_id()]->rt_sched;
+
+    nk_thread_t *t = get_cur_thread();
+    nk_thread_exit(t);
+    t->rt_thread->status = SLEEPING;
+    list_enqueue(sched->sleeping, t->rt_thread);
+    wait_on(t->rt_thread, sleep);
+    nk_schedule();
+}
+#endif
+
 
 
 /*

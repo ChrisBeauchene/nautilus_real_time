@@ -216,6 +216,11 @@ extern "C" {
     inline void nk_enqueue_thread_on_runq(nk_thread_t * t, int cpu);
     inline nk_thread_t* nk_dequeue_thread_from_runq(nk_thread_t * t);
     int nk_thread_queue_sleep(nk_thread_queue_t * q);
+
+#ifdef NAUT_CONFIG_USE_RT_SCHEDULER
+    int sleep_on_queue(rt_thread *sleep);
+#endif
+
     int nk_thread_queue_wake_one(nk_thread_queue_t * q);
     int nk_thread_queue_wake_all(nk_thread_queue_t * q);
     

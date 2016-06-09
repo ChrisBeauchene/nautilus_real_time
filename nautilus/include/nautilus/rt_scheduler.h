@@ -120,6 +120,7 @@ void list_enqueue(rt_list *l, rt_thread *t);
 rt_thread* list_dequeue(rt_list *l);
 rt_thread* list_remove(rt_list *l, rt_thread *t);
 rt_thread* remove_thread(rt_thread *thread);
+void rt_thread_exit(rt_thread *thread);
 int rt_list_empty(rt_list *l);
 
 
