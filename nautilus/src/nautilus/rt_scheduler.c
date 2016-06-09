@@ -240,10 +240,10 @@ void wake_up(rt_thread *A, rt_thread *B) {
 }
 
 void wake_up_all(rt_thread *A) {
-    rt_thread *woke = list_dequeue(A->waiting);
+    rt_thread *woke = list_dequeue(A->holding);
     while (woke != NULL) {
-        list_remove(woke->holding, A);
-        woke = list_dequeue(A->waiting);
+        list_remove(woke->waiting, A);
+        woke = list_dequeue(A->holding);
     }
 }
 

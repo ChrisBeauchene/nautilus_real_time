@@ -963,7 +963,9 @@ nk_wait (nk_thread_id_t t)
     nk_schedule();
 }
 #else
-{}
+{
+
+}
 #endif
 
 
@@ -1401,6 +1403,13 @@ __thread_fork (void)
 
     rt_thread *rt_parent = me->rt_thread;
     rt_thread *rt = rt_thread_init(rt_parent->type, rt_parent->constraints, rt_parent->deadline, tid);
+    rt->parent = rt_parent;
+    if (rt_parent != NULL) {
+        list_enqueue(rt_parent->children, rt);
+    } else {
+        printk("THE CURRENT THREAD HAS NO REAL-TIME THREAD.\n");
+    }
+
     struct sys_info *sys = per_cpu_get(system);
     if (sys->cpus[cpu]->rt_sched)
     {
