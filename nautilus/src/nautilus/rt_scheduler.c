@@ -818,10 +818,11 @@ struct nk_thread *rt_need_resched()
 
 static int check_deadlines(rt_thread *t)
 {
-	rt_thread_dump(t);
+	
     if (t->exit_time > t->deadline) {
         RT_SCHED_ERROR("Missed Deadline = %llu\t\t Current Timer = %llu\n", t->deadline, t->exit_time);
         RT_SCHED_ERROR("Difference =  %llu\n", t->exit_time - t->deadline);
+        rt_thread_dump(t);
 		return 1;
     }
     return 0;
