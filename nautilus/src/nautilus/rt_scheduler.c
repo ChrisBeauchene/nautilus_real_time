@@ -52,7 +52,7 @@
 
 #define ARRIVED 0
 #define ADMITTED 1
-#define TOBO_REMOVED 2
+#define TOBE_REMOVED 2
 #define REMOVED 3
 #define SLEEPING 4
 
