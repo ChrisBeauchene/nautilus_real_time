@@ -52,6 +52,9 @@
 
 #define ARRIVED 0
 #define ADMITTED 1
+#define TOBO_REMOVED 2
+#define REMOVED 3
+#define SLEEPING 4
 
 #define RUNNABLE_QUEUE 0
 #define PENDING_QUEUE 1
@@ -283,8 +286,18 @@ rt_scheduler* rt_scheduler_init(rt_thread *main_thread)
         aperiodic->size = 0;
         scheduler->aperiodic = aperiodic;
 		
-		scheduler->arrival = rt_list_init();
-        scheduler->exited = rt_list_init();
+        rt_list *arrival = rt_list_init();
+        rt_list *exited = rt_list_init();
+        rt_list *sleeping = rt_list_init();
+
+        if (!arrival || !exited || !sleeping) {
+            RT_SCHED_ERROR("Could not allocate rt scheduler's list.\n");
+            return NULL;
+        } 
+
+		scheduler->arrival = arrival;
+        scheduler->exited = exited;
+        scheduler->sleeping = sleeping;
         scheduler->tsc = info;
 
     }
@@ -373,6 +386,157 @@ void enqueue_thread(rt_queue *queue, rt_thread *thread)
         thread->q_type = APERIODIC_QUEUE;
         queue->threads[pos] = thread;
     } 
+}
+
+rt_thread* remove_thread(rt_thread *thread) {
+    rt_queue *queue = NULL;
+    queue_type type = thread->q_type;
+    struct sys_info *sys = per_cpu_get(system);
+    rt_scheduler *scheduler = sys->cpus[my_cpu_id()]->rt_sched;
+
+    if (type == RUNNABLE_QUEUE) {
+        queue = scheduler->runnable;
+
+        if (queue == NULL) {
+            RT_SCHED_ERROR("RUNNABLE QUEUE NOT FOUND\n");
+            return NULL;
+        }
+
+        if (queue->size < 1) {
+            RT_SCHED_ERROR("RUNNABLE QUEUE IS EMPTY. CAN'T REMOVE.\n");
+            return NULL;
+        }
+
+        rt_thread *target_thread, *last;
+        int i = 0, target_index = queue->size, now, child;
+        for (i = 0; i < queue->size; i++) {
+            if (thread == queue->threads[i]) {
+                target_index = i;
+                break;
+            }
+        }
+
+        if (target_index == queue->size) {
+            RT_SCHED_ERROR("THREAD NOT FOUND ON QUEUE\n");
+            return NULL;
+        }
+        target_thread = queue->threads[target_index];
+        last = queue->threads[--queue->size];
+
+        for (now = target_index; left_child(now) < queue->size; now = child)
+        {
+            child = left_child(now);
+            if (child < queue->size && queue->threads[right_child(now)]->deadline < queue->threads[left_child(now)]->deadline)
+            {
+                child = right_child(now);
+            }
+            
+            if (last->deadline > queue->threads[child]->deadline)
+            {
+                queue->threads[now] = queue->threads[child];
+            } else {
+                break;
+            }
+        }
+        
+        queue->threads[now] = last;
+        return thread;
+    } else if (type == PENDING_QUEUE) {
+        queue = scheduler->pending;
+
+        if (queue == NULL) {
+            RT_SCHED_ERROR("PENDING QUEUE NOT FOUND\n");
+            return NULL;
+        }
+
+        if (queue->size < 1) {
+            RT_SCHED_ERROR("PENDING QUEUE IS EMPTY. CAN'T REMOVE.\n");
+            return NULL;
+        }
+
+        rt_thread *target_thread, *last;
+        int i = 0, target_index = queue->size, now, child;
+        for (i = 0; i < queue->size; i++) {
+            if (thread == queue->threads[i]) {
+                target_index = i;
+                break;
+            }
+        }
+
+        if (target_index == queue->size) {
+            RT_SCHED_ERROR("THREAD NOT FOUND ON QUEUE\n");
+            return NULL;
+        }
+        target_thread = queue->threads[target_index];
+        last = queue->threads[--queue->size];
+
+        for (now = target_index; left_child(now) < queue->size; now = child)
+        {
+            child = left_child(now);
+            if (child < queue->size && queue->threads[right_child(now)]->deadline < queue->threads[left_child(now)]->deadline)
+            {
+                child = right_child(now);
+            }
+            
+            if (last->deadline > queue->threads[child]->deadline)
+            {
+                queue->threads[now] = queue->threads[child];
+            } else {
+                break;
+            }
+        }
+        
+        queue->threads[now] = last;
+        return thread;
+    }  else if (type == APERIODIC_QUEUE) {
+        queue = scheduler->aperiodic;
+
+        if (queue == NULL) {
+            RT_SCHED_ERROR("APERIODIC QUEUE NOT FOUND\n");
+            return NULL;
+        }
+
+        if (queue->size < 1) {
+            RT_SCHED_ERROR("APERIODIC QUEUE IS EMPTY. CAN'T REMOVE.\n");
+            return NULL;
+        }
+
+        rt_thread *target_thread, *last;
+        int i = 0, target_index = queue->size, now, child;
+        for (i = 0; i < queue->size; i++) {
+            if (thread == queue->threads[i]) {
+                target_index = i;
+                break;
+            }
+        }
+
+        if (target_index == queue->size) {
+            RT_SCHED_ERROR("THREAD NOT FOUND ON QUEUE\n");
+            return NULL;
+        }
+        target_thread = queue->threads[target_index];
+        last = queue->threads[--queue->size];
+
+        for (now = target_index; left_child(now) < queue->size; now = child)
+        {
+            child = left_child(now);
+            if (child < queue->size && queue->threads[right_child(now)]->constraints->aperiodic.priority < queue->threads[left_child(now)]->constraints->aperiodic.priority)
+            {
+                child = right_child(now);
+            }
+            
+            if (last->constraints->aperiodic.priority > queue->threads[child]->constraints->aperiodic.priority)
+            {
+                queue->threads[now] = queue->threads[child];
+            } else {
+                break;
+            }
+        }
+        
+        queue->threads[now] = last;
+        return thread;
+    }
+    return NULL;
 }
 
 rt_thread* dequeue_thread(rt_queue *queue)
@@ -986,10 +1150,6 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
 }
 
 static void sched_sim(void *scheduler) {
-	// while (1) {
-	// 	printk("Running the scheduler on core %d\n", my_cpu_id());
-	// 	udelay(100000);
-	// }
 
 	rt_simulator *sim = init_simulator();
 
@@ -1006,6 +1166,22 @@ static void sched_sim(void *scheduler) {
             }
             list_enqueue(sched->arrival, new);
         }
+
+        rt_thread *d = list_dequeue(sched->exited);
+        while (d != NULL) {
+            rt_thread *e = NULL;
+            if (d->status == ADMITTED) {
+                e = remove_thread(d); 
+            } else if (d->status == SLEEPING) {
+                e = list_remove(sched->sleeping);
+            }
+
+            if (d->status != REMOVED && e == NULL) {
+                RT_SCHED_ERROR("REMOVING THREAD INCORRECTLY.\n");
+            } else {
+                d->status = REMOVED;
+            }
+        }   
     }
 }
 
@@ -1337,4 +1513,11 @@ void nk_rt_test()
 static inline uint64_t umin(uint64_t x, uint64_t y)
 {
     return (x < y) ? x : y;
+}
+
+void rt_thread_exit(rt_thread *thread) {
+    thread->status = TOBE_REMOVED;
+    struct sys_info *sys = per_cpu_get(system);
+    rt_scheduler *sched = sys->cpus[my_cpu_id()]->rt_sched;
+    list_enqueue(sched->exited, thread);
 }

@@ -31,8 +31,7 @@ typedef union rt_constraints {
 
 typedef enum { APERIODIC = 0, SPORADIC = 1, PERIODIC = 2} rt_type;
 typedef enum { RUNNABLE_QUEUE = 0, PENDING_QUEUE = 1, APERIODIC_QUEUE = 2} queue_type;
-typedef enum { ARRIVED = 0, ADMITTED = 1, WAITING = 2} rt_status;
-typedef enum { WAITING_LIST = 0, HOLDING_LIST = 1} list_type;
+typedef enum { ARRIVED = 0, ADMITTED = 1, TOBO_REMOVED = 2, REMOVED = 3, SLEEPING = 4} rt_status;
 
 struct rt_thread;
 
@@ -91,6 +90,7 @@ typedef struct rt_scheduler {
     rt_queue *pending;
     rt_queue *aperiodic;
 
+    rt_list *sleeping;
     rt_list *arrival;
     rt_list *exited;
 
@@ -116,8 +116,10 @@ void wait_on(rt_thread *A, rt_thread *B);
 void wake_up(rt_thread *A, rt_thread *B);
 void wake_up_all(rt_thread *A);
 void list_enqueue(rt_list *l, rt_thread *t);
+
 rt_thread* list_dequeue(rt_list *l);
 rt_thread* list_remove(rt_list *l, rt_thread *t);
+rt_thread* remove_thread(rt_thread *thread);
 
 
 
