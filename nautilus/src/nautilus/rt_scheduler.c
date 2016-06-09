@@ -67,6 +67,11 @@ typedef struct rt_thread_sim {
     rt_status status;
     rt_constraints *constraints;
 
+    uint64_t start_time; 
+    uint64_t run_time;
+    uint64_t deadline;
+    uint64_t exit_time;
+
     rt_list *holding;
     rt_list *waiting;
 
