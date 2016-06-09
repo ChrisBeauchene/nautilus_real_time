@@ -119,6 +119,7 @@ static inline uint64_t umin(uint64_t x, uint64_t y);
 
 static rt_list* rt_list_init();
 static rt_node* rt_node_init(rt_thread *t);
+static int list_empty(rt_list *l);
 
 static void sched_sim(void *scheduler);
 
@@ -168,6 +169,10 @@ static rt_node* rt_node_init(rt_thread *t) {
     node->next = NULL;
     node->prev = NULL;
     return node;
+}
+
+static int list_empty(rt_list *l) {
+    return (l->head == NULL);
 }
 
 void list_enqueue(rt_list *l, rt_thread *t) {
@@ -240,12 +245,28 @@ void wait_on(rt_thread *A, rt_thread *B) {
 void wake_up(rt_thread *A, rt_thread *B) {
     list_remove(A->waiting, B);
     list_remove(B->holding, A);
+
+    if (list_empty(A->waiting)) {
+        struct sys_info *sys = per_cpu_get(system);
+        rt_scheduler *sched = sys->cpus[my_cpu_id()]->rt_sched;
+        if (A->status == REMOVED) return;
+
+        list_remove(sched->sleeping, A);
+        if (A->type == APERIODIC) {
+            A->status = ADMITTED;
+            enqueue_thread(sched->aperiodic, A);
+        } else {
+            A->status = ARRIVED;
+            list_enqueue(sched->arrival, A);
+        }
+    }
 }
 
 void wake_up_all(rt_thread *A) {
     rt_thread *woke = list_dequeue(A->holding);
+    
     while (woke != NULL) {
-        list_remove(woke->waiting, A);
+        wake_up(woke, A);
         woke = list_dequeue(A->holding);
     }
 }
@@ -1171,8 +1192,10 @@ static void sched_sim(void *scheduler) {
         while (d != NULL) {
             rt_thread *e = NULL;
             if (d->status == ADMITTED) {
+                d->status = REMOVED;
                 e = remove_thread(d); 
             } else if (d->status == SLEEPING) {
+                d->status = REMOVED;
                 e = list_remove(sched->sleeping, d);
             }
 
