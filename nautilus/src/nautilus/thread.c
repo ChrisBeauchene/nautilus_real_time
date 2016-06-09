@@ -960,7 +960,7 @@ nk_join_all_children (int (*func)(void * res))
 }
 #else
 {
-    return 
+    return 0;
 }
 #endif
 
