@@ -165,7 +165,7 @@ static rt_node* rt_node_init(rt_thread *t) {
     node->thread = t;
     node->next = NULL;
     node->prev = NULL;
-    return rt_node;
+    return node;
 }
 
 static void list_enqueue(rt_list *l, rt_thread *t) {
