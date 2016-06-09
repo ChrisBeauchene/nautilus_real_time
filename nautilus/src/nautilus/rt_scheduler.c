@@ -1173,7 +1173,7 @@ static void sched_sim(void *scheduler) {
             if (d->status == ADMITTED) {
                 e = remove_thread(d); 
             } else if (d->status == SLEEPING) {
-                e = list_remove(sched->sleeping);
+                e = list_remove(sched->sleeping, d);
             }
 
             if (d->status != REMOVED && e == NULL) {
