@@ -11,20 +11,6 @@
 
 #include <nautilus/thread.h>
 
-/******************************************************************
- REAL TIME THREAD
- THREE TYPES (all have their own constraints)
- - PERIODIC
- - SPORADIC
- - APERIODIC
- 
- THREE STATUSES
- - CREATED
- - ADMITTED
- - RUNNING
- 
- ******************************************************************/
-
 struct periodic_constraints {
     uint64_t period, slice;
 };
@@ -44,8 +30,21 @@ typedef union rt_constraints {
 } rt_constraints;
 
 typedef enum { APERIODIC = 0, SPORADIC = 1, PERIODIC = 2} rt_type;
-typedef enum {RUNNABLE_QUEUE = 0, PENDING_QUEUE = 1, APERIODIC_QUEUE = 2, ARRIVAL_QUEUE = 3, WAITING_QUEUE = 4} queue_type;
+typedef enum { RUNNABLE_QUEUE = 0, PENDING_QUEUE = 1, APERIODIC_QUEUE = 2} queue_type;
 typedef enum { ARRIVED = 0, ADMITTED = 1, WAITING = 2} rt_status;
+typedef enum { WAITING_LIST = 0, HOLDING_LIST = 1} list_type;
+
+struct rt_thread;
+struct rt_node {
+    struct rt_thread *thread;
+    struct rt_node *next;
+    struct rt_node *prev;
+};
+
+typedef struct rt_list {
+    rt_node *head;
+    rt_node *tail;
+} rt_list;
 
 typedef struct rt_thread {
     rt_type type;
@@ -57,6 +56,10 @@ typedef struct rt_thread {
     uint64_t deadline;
     uint64_t exit_time;
     struct nk_thread *thread;
+
+    rt_list *holding;
+    rt_list *waiting;
+
 } rt_thread;
 
 rt_thread* rt_thread_init(int type,
@@ -67,7 +70,7 @@ rt_thread* rt_thread_init(int type,
 
 typedef struct rt_queue {
     queue_type type;
-    uint64_t size, head, tail;
+    uint64_t size;
     rt_thread *threads[0];
 } rt_queue ;
 
@@ -83,8 +86,10 @@ typedef struct rt_scheduler {
     rt_queue *runnable;
     rt_queue *pending;
     rt_queue *aperiodic;
-    rt_queue *arrival;
-    rt_queue *waiting;
+
+    rt_list *arrival;
+    rt_list *exited;
+
     rt_thread *main_thread;
     uint64_t run_time;
     tsc_info *tsc;

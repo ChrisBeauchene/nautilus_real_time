@@ -42,27 +42,21 @@
 #define MAX(x, y) (((x) >(y)) ? (x) : (y))
 #endif
 
-// Thread definitions
-// Types
 #define APERIODIC 0
 #define SPORADIC 1
 #define PERIODIC 2
 
-// UTILIZATION FACTOR LIMITS
 #define PERIODIC_UTIL 65000
 #define SPORADIC_UTIL 18000
 #define APERIODIC_UTIL 9000
 
 #define ARRIVED 0
 #define ADMITTED 1
-#define WAITING 2
 
-// Queue types
 #define RUNNABLE_QUEUE 0
 #define PENDING_QUEUE 1
 #define APERIODIC_QUEUE 2
-#define ARRIVAL_QUEUE 3
-#define WAITING_QUEUE 4
+
 #define MAX_QUEUE 256
 
 #define QUANTUM 10000000
@@ -72,10 +66,10 @@ typedef struct rt_thread_sim {
     queue_type q_type;
     rt_status status;
     rt_constraints *constraints;
-    uint64_t start_time; 
-    uint64_t run_time;
-    uint64_t deadline;
-    uint64_t exit_time;
+
+    rt_list *holding;
+    rt_list *waiting;
+
 } rt_thread_sim;
 
 typedef struct rt_queue_sim {
@@ -92,22 +86,10 @@ typedef struct rt_simulator {
 
 static rt_simulator* init_simulator();
 
-// Switching thread function
-/*static inline void update_exit(rt_thread *t)
-{
-    t->exit_time = cur_time();
-    t->run_time += (t->exit_time - t->start_time);
-}
-
-static inline void update_enter(rt_thread *t)
-{
-    t->start_time = cur_time();
-}*/
 static int check_deadlines(rt_thread *t);
 static inline void update_periodic(rt_thread *t);
 static void set_timer(rt_scheduler *scheduler, rt_thread *thread, uint64_t end_time, uint64_t slack);
 
-// Admission Control Functions
 static rt_thread_sim *rt_need_resched_logic(rt_simulator *simulator, rt_thread_sim *thread, uint64_t time);
 static uint64_t set_timer_logic(rt_simulator *simulator, rt_thread_sim *thread, uint64_t time);
 static void enqueue_thread_logic(rt_queue_sim *queue, rt_thread_sim *thread);
@@ -126,10 +108,7 @@ static inline uint64_t get_avg_per(rt_queue *runnable, rt_queue *pending, rt_thr
 static inline uint64_t get_per_util(rt_queue *runnable, rt_queue *pending);
 static inline uint64_t get_spor_util(rt_queue *runnable);
 static inline uint64_t umin(uint64_t x, uint64_t y);
-/********** Function definitions *************/
 
-
-// SCHEDULE FUNCTIONS
 static void sched_sim(void *scheduler);
 
 rt_thread* rt_thread_init(int type,
@@ -165,13 +144,12 @@ rt_scheduler* rt_scheduler_init(rt_thread *main_thread)
     rt_queue *runnable = (rt_queue *)malloc(sizeof(rt_queue) + MAX_QUEUE * sizeof(rt_thread *));
     rt_queue *pending = (rt_queue *)malloc(sizeof(rt_queue) + MAX_QUEUE * sizeof(rt_thread *));
     rt_queue *aperiodic = (rt_queue *)malloc(sizeof(rt_queue) + MAX_QUEUE * sizeof(rt_thread *));
-    rt_queue *arrival = (rt_queue *)malloc(sizeof(rt_queue) + MAX_QUEUE * sizeof(rt_thread *));
-    rt_queue *waiting = (rt_queue *)malloc(sizeof(rt_queue) + MAX_QUEUE * sizeof(rt_thread *));
+
     tsc_info *info = (tsc_info *)malloc(sizeof(tsc_info));
 
 	scheduler->main_thread = main_thread;
 
-    if (!scheduler || !runnable || ! pending || !aperiodic || !arrival || !waiting || !info) {
+    if (!scheduler || !runnable || ! pending || !aperiodic || !info) {
         RT_SCHED_ERROR("Could not allocate rt scheduler\n");
         return NULL;
     } else {
@@ -183,8 +161,6 @@ rt_scheduler* rt_scheduler_init(rt_thread *main_thread)
 		ZERO_QUEUE(runnable);
 		ZERO_QUEUE(pending);
 		ZERO_QUEUE(aperiodic);
-		ZERO_QUEUE(arrival);
-		ZERO_QUEUE(waiting);
 		
         runnable->type = RUNNABLE_QUEUE;
         runnable->size = 0;
@@ -197,18 +173,6 @@ rt_scheduler* rt_scheduler_init(rt_thread *main_thread)
         aperiodic->type = APERIODIC_QUEUE;
         aperiodic->size = 0;
         scheduler->aperiodic = aperiodic;
-
-        arrival->type = ARRIVAL_QUEUE;
-        arrival->size = 0;
-        arrival->head = 0;
-        arrival->tail = 0;
-        scheduler->arrival = arrival;
-
-        waiting->type = WAITING_QUEUE;
-        waiting->size = 0;
-        waiting->head = 0;
-        waiting->tail = 0;
-        scheduler->waiting = waiting;
 		
 			
         scheduler->tsc = info;
@@ -298,38 +262,7 @@ void enqueue_thread(rt_queue *queue, rt_thread *thread)
         }
         thread->q_type = APERIODIC_QUEUE;
         queue->threads[pos] = thread;
-    } else if (queue->type == ARRIVAL_QUEUE) 
-    {
-        if (queue->size == MAX_QUEUE - 1) {
-            RT_SCHED_ERROR("ARRIVAL QUEUE IS FULL!");
-            return;
-        }
-
-        queue->size++;
-        uint64_t pos = queue->tail++;
-
-        if (queue->tail == MAX_QUEUE - 1) {
-            queue->tail = 0;
-        }
-
-        thread->q_type = ARRIVAL_QUEUE;
-        queue->threads[pos] = thread;
-    } else if (queue->type == WAITING_QUEUE) 
-    {
-        if (queue->size == MAX_QUEUE) {
-            RT_SCHED_ERROR("WAITING QUEUE IS FULL!");
-            return;
-        }
-
-        queue->size++;
-        uint64_t pos = queue->tail++;
-
-        if (queue->tail == MAX_QUEUE - 1) {
-            queue->tail = 0;
-        }
-        thread->q_type = WAITING_QUEUE;
-        queue->threads[pos] = thread;
-    }
+    } 
 }
 
 rt_thread* dequeue_thread(rt_queue *queue)
@@ -431,28 +364,6 @@ rt_thread* dequeue_thread(rt_queue *queue)
         queue->threads[now] = last;
         
         return min;
-    } else if (queue->type == ARRIVAL_QUEUE)
-    {
-        if (queue->head == queue->tail) {
-            // RT_SCHED_ERROR("ARRIVAL QUEUE EMPTY! CAN'T DEQUEUE!\n");
-            return NULL;
-        }
-        uint64_t pos = queue->head++;
-        if (queue->head == MAX_QUEUE - 1) {
-            queue->head = 0;
-        }
-        return queue->threads[pos];
-    } else if (queue->type == WAITING_QUEUE)
-    {
-        if (queue->head == queue->tail) {
-            RT_SCHED_ERROR("WAITING QUEUE EMPTY! CAN'T DEQUEUE!\n");
-            return NULL;
-        }
-        uint64_t pos = queue->head++;
-        if (queue->head == MAX_QUEUE - 1) {
-            queue->head = 0;
-        }
-        return queue->threads[pos];
     }
     return NULL;
 }
@@ -678,6 +589,9 @@ struct nk_thread *rt_need_resched()
         if (scheduler->pending->threads[0]->deadline < end_time)
         {
             rt_thread *arrived_thread = dequeue_thread(scheduler->pending);
+            if (arrived_thread == NULL) {
+                continue;
+            }
             update_periodic(arrived_thread);
             enqueue_thread(scheduler->runnable, arrived_thread);
             continue;
@@ -690,49 +604,59 @@ struct nk_thread *rt_need_resched()
     switch (rt_c->type) {
         case APERIODIC:
             rt_c->constraints->aperiodic.priority = rt_c->run_time;
-            
+            enqueue_thread(scheduler->aperiodic, rt_c);
+
             if (scheduler->runnable->size > 0)
             {
-                enqueue_thread(scheduler->aperiodic, rt_c);
                 rt_n = dequeue_thread(scheduler->runnable);
-                set_timer(scheduler, rt_n, end_time, slack);
-                return rt_n->thread;
+                if (rt_n != NULL) {
+                    set_timer(scheduler, rt_n, end_time, slack);
+                    return rt_n->thread;
+                }
             }
-            enqueue_thread(scheduler->aperiodic, rt_c);
+
             rt_n = dequeue_thread(scheduler->aperiodic);
+            if (rt_n == NULL) {
+                    RT_SCHED_ERROR("APERIODIC QUEUE IS EMPTY.\n THE WORLD IS GOVERNED BY MADNESS.\n");
+                    panic("ATTEMPTING TO RUN A NULL RT_THREAD.\n");
+            }
             set_timer(scheduler, rt_n, end_time, slack);
             return rt_n->thread;
             break;
             
         case SPORADIC:
-            if (scheduler->runnable->size > 0)
-            {
-                if (rt_c->deadline > scheduler->runnable->threads[0]->deadline)
-                {
+            if (rt_c->run_time >= rt_c->constraints->sporadic.work) {
+                check_deadlines(rt_c);
+
+                if (scheduler->runnable->size > 0) {
                     rt_n = dequeue_thread(scheduler->runnable);
-                    enqueue_thread(scheduler->runnable, rt_c);
-                    set_timer(scheduler, rt_n, end_time, slack);
-                    return rt_n->thread;
-                } else
-                {
-                    if (rt_c->run_time >= rt_c->constraints->sporadic.work)
-                    {
-                        check_deadlines(rt_c);
-                        rt_n = dequeue_thread(scheduler->runnable);
+                    if (rt_n != NULL) {
                         set_timer(scheduler, rt_n, end_time, slack);
                         return rt_n->thread;
                     }
                 }
+                rt_n = dequeue_thread(scheduler->aperiodic);
+                if (rt_n == NULL) {
+                    RT_SCHED_ERROR("APERIODIC QUEUE IS EMPTY.\n THE WORLD IS GOVERNED BY MADNESS.\n");
+                    panic("ATTEMPTING TO RUN A NULL RT_THREAD.\n");
+                }
+                set_timer(scheduler, rt_n, end_time, slack);
+                return rt_n->thread;
+            } else {
+                if (scheduler->runnable->size > 0)
+                {
+                    if (rt_c->deadline > scheduler->runnable->threads[0]->deadline) {
+                        rt_n = dequeue_thread(scheduler->runnable);
+                        if (rt_n != NULL) {
+                            enqueue_thread(scheduler->runnable, rt_c);
+                            set_timer(scheduler, rt_n, end_time, slack);
+                            return rt_n->thread;
+                        }
+                    }
+                }
             }
-            
-            if (rt_c->run_time <= rt_c->constraints->sporadic.work)
-            {
-                set_timer(scheduler, rt_c, end_time, slack);
-                return rt_c->thread;
-            }
-            rt_n = dequeue_thread(scheduler->aperiodic);
-            set_timer(scheduler, rt_n, end_time, slack);
-            return rt_n->thread;
+            set_timer(scheduler, rt_c, end_time, slack);
+            return rt_c->thread;
             break;
             
         case PERIODIC:
@@ -746,11 +670,16 @@ struct nk_thread *rt_need_resched()
 
                 if (scheduler->runnable->size > 0) {
                     rt_n = dequeue_thread(scheduler->runnable);
-                    set_timer(scheduler, rt_n, end_time, slack);
-                    return rt_n->thread;
+                    if (rt_n != NULL) {
+                        set_timer(scheduler, rt_n, end_time, slack);
+                        return rt_n->thread;
+                    }
                 }
-                
                 rt_n = dequeue_thread(scheduler->aperiodic);
+                if (rt_n == NULL) {
+                    RT_SCHED_ERROR("APERIODIC QUEUE IS EMPTY.\n THE WORLD IS GOVERNED BY MADNESS.\n");
+                    panic("ATTEMPTING TO RUN A NULL RT_THREAD.\n");
+                }
                 set_timer(scheduler, rt_n, end_time, slack);
                 return rt_n->thread;
             } else {
@@ -758,9 +687,11 @@ struct nk_thread *rt_need_resched()
                 {
                     if (rt_c->deadline > scheduler->runnable->threads[0]->deadline) {
                         rt_n = dequeue_thread(scheduler->runnable);
-                        enqueue_thread(scheduler->runnable, rt_c);
-                        set_timer(scheduler, rt_n, end_time, slack);
-                        return rt_n->thread;
+                        if (rt_n != NULL) {
+                            enqueue_thread(scheduler->runnable, rt_c);
+                            set_timer(scheduler, rt_n, end_time, slack);
+                            return rt_n->thread;
+                        }
                     }
                 }
             }
@@ -770,8 +701,7 @@ struct nk_thread *rt_need_resched()
         default:
             set_timer(scheduler, rt_c, end_time, slack);
             return c;
-    }
-    
+    }    
 }
 
 
@@ -929,7 +859,8 @@ static void test_real_time(void *in)
 {
     while (1)
     {
-        udelay(1000000);
+        printk("Inside thread %d\n", *(int *)in);
+        udelay(10000);
     }
 }
 
@@ -1106,31 +1037,50 @@ static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_s
     
     switch (thread->type) {
         case APERIODIC:
-            update_exit_logic(thread, time);
             thread->constraints->aperiodic.priority = thread->run_time;
             
             if (simulator->runnable->size > 0)
             {
                 enqueue_thread_logic(simulator->aperiodic, thread);
                 next = dequeue_thread_logic(simulator->runnable);
-                update_enter_logic(next, time);
                 set_timer_logic(simulator, next, time);
                 return next;
             }
 
             enqueue_thread_logic(simulator->aperiodic, thread);
             next = dequeue_thread_logic(simulator->aperiodic);
-            update_enter_logic(next, time);
             set_timer_logic(simulator, next, time);
             return next;
 
             break;
             
         case SPORADIC:
+            if (thread->run_time >= thread->constraints->sporadic.work) {
+                if (simulator->runnable->size > 0) {
+                    next = dequeue_thread_logic(simulator->runnable);
+                    set_timer_logic(simulator, next, time);
+                    return next;
+                }
+                next = dequeue_thread_logic(simulator->aperiodic);
+                set_timer_logic(simulator, next, time);
+                return next;
+            } else {
+                if (simulator->runnable->size > 0)
+                {
+                    if (thread->deadline > simulator->runnable->threads[0]->deadline) {
+                        next = dequeue_thread_logic(simulator->runnable);
+                        enqueue_thread_logic(simulator->runnable, thread);
+                        set_timer_logic(simulator, next, time);
+                        return next;
+                    }
+                }
+            }
+
+            set_timer_logic(simulator, thread, time);
+            return thread;
             break;
             
         case PERIODIC:
-            update_exit_logic(thread, time);
             if (thread->run_time >= thread->constraints->periodic.slice) {
                 if (check_deadlines_logic(thread, time)) {
                     update_periodic_logic(thread, time);
@@ -1140,12 +1090,10 @@ static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_s
                 }
                 if (simulator->runnable->size > 0) {
                     next = dequeue_thread_logic(simulator->runnable);
-                    update_enter_logic(next, time);
                     set_timer_logic(simulator, next, time);
                     return next;
                 }
                 next = dequeue_thread_logic(simulator->aperiodic);
-                update_enter_logic(next, time);
                 set_timer_logic(simulator, next, time);
                 return next;
             } else {
@@ -1154,22 +1102,17 @@ static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_s
                     if (thread->deadline > simulator->runnable->threads[0]->deadline) {
                         next = dequeue_thread_logic(simulator->runnable);
                         enqueue_thread_logic(simulator->runnable, thread);
-                        update_enter_logic(next, time);
                         set_timer_logic(simulator, next, time);
                         return next;
                     }
                 }
             }
-            next = dequeue_thread_logic(simulator->aperiodic);
-            update_enter_logic(next, time);
-            set_timer_logic(simulator, next, time);
-            return next;
-        default:
-            update_enter_logic(thread, time);
             set_timer_logic(simulator, thread, time);
             return thread;
-    }
-    
+        default:
+            set_timer_logic(simulator, thread, time);
+            return thread;
+    }    
 }
 
 static inline void update_exit_logic(rt_thread_sim *t, uint64_t time)
