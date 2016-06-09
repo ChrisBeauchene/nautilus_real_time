@@ -191,7 +191,7 @@ rt_thread* list_dequeue(rt_list *l) {
     }
 
     if (l->head == NULL) {
-        RT_SCHED_ERROR("RT_LIST IS EMPTY");
+        RT_SCHED_ERROR("RT_LIST IS EMPTY\n");
         return NULL;
     }
 
