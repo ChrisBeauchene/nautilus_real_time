@@ -114,8 +114,10 @@ uint64_t cur_time();
 int rt_admit(rt_scheduler *scheduler, rt_thread *thread);
 void wait_on(rt_thread *A, rt_thread *B);
 void wake_up(rt_thread *A, rt_thread *B);
+void wake_up_all(rt_thread *A);
 void list_enqueue(rt_list *l, rt_thread *t);
 rt_thread* list_dequeue(rt_list *l);
+rt_thread* list_remove(rt_list *l, rt_thread *t);
 
 
 

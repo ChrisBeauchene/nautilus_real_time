@@ -117,9 +117,6 @@ static inline uint64_t umin(uint64_t x, uint64_t y);
 static rt_list* rt_list_init();
 static rt_node* rt_node_init(rt_thread *t);
 
-
-static rt_thread* list_remove(rt_list *l, rt_thread *t);
-
 static void sched_sim(void *scheduler);
 
 rt_thread* rt_thread_init(int type,
@@ -206,7 +203,7 @@ rt_thread* list_dequeue(rt_list *l) {
     return n->thread;
 }
 
-static rt_thread* list_remove(rt_list *l, rt_thread *t) {
+rt_thread* list_remove(rt_list *l, rt_thread *t) {
     rt_node *n = l->head;
     while (n != NULL) {
         if (n->thread == t) {
@@ -240,6 +237,14 @@ void wait_on(rt_thread *A, rt_thread *B) {
 void wake_up(rt_thread *A, rt_thread *B) {
     list_remove(A->waiting, B);
     list_remove(B->holding, A);
+}
+
+void wake_up_all(rt_thread *A) {
+    rt_thread *woke = list_dequeue(A->waiting);
+    while (woke != NULL) {
+        list_remove(woke->holding, A);
+        woke = list_dequeue(A->waiting);
+    }
 }
 
 rt_scheduler* rt_scheduler_init(rt_thread *main_thread)

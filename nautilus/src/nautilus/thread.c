@@ -84,6 +84,7 @@ static inline void update_enter(rt_thread *t) {
 	t->start_time = rdtsc();
 }
 
+/****** SEE BELOW FOR EXTERNAL THREAD INTERFACE ********/
 
 
 nk_thread_queue_t*
@@ -230,6 +231,7 @@ dequeue_thread_from_tlist (nk_thread_t * t)
 static int
 thread_detach (nk_thread_t * t)
 {
+    #ifndef NAUT_CONFIG_USE_RT_SCHEDULER
     ASSERT(t->refcount > 0);
     
     /* remove me from my parent's child list */
@@ -238,6 +240,13 @@ thread_detach (nk_thread_t * t)
     if (--t->refcount == 0) {
         nk_thread_destroy(t);
     }
+
+    #else
+        rt_thread *rt = t->rt_thread;
+        ASSERT(rt->parent != NULL);
+        list_remove(rt->parent->children, rt);
+        nk_thread_destroy(t);   
+    #endif
     
     return 0;
 }
@@ -644,6 +653,20 @@ nk_thread_start (nk_thread_fun_t fun,
 
 #ifdef NAUT_CONFIG_USE_RT_SCHEDULER
     rt_thread *rt = rt_thread_init(rt_type, rt_constraints, rt_deadline, newthread);
+    nk_thread *parent = get_cur_thread();
+    if (parent != NULL) {
+        rt->parent = parent->rt_thread;
+
+        // Put myself on the parent's child list
+        if (parent->rt_thread != NULL) {
+            list_enqueue(parent->rt_thread->children, rt);
+        } else {
+            printk("THE CURRENT THREAD HAS NO REAL-TIME THREAD.\n");
+        }
+    } else {
+        rt->parent = NULL;
+    }
+
     struct sys_info *sys = per_cpu_get(system);
     if (sys->cpus[cpu]->rt_sched)
     {
@@ -724,7 +747,13 @@ void
 nk_wake_waiters (void)
 {
     nk_thread_t * me  = get_cur_thread();
-    nk_thread_queue_wake_all(me->waitq);
+    
+    #ifndef NAUT_CONFIG_USE_RT_SCHEDULER
+        nk_thread_queue_wake_all(me->waitq);
+    #else
+        rt_thread *rt = me->rt_thread;
+        wake_up_all(rt);
+    #endif
 }
 
 
