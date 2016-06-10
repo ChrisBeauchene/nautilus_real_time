@@ -1435,7 +1435,7 @@ static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler, r
         new_sim->deadline = constraints->sporadic.work;
     }
 
-    enqueue_thread_logic(simulator->runnable, d);
+    enqueue_thread_logic(simulator->runnable, new_sim);
 }
 
 static void free_threads_sim(rt_simulator *simulator) {
