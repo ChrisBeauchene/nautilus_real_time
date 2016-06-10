@@ -98,7 +98,7 @@ static int check_deadlines(rt_thread *t);
 static inline void update_periodic(rt_thread *t);
 static void set_timer(rt_scheduler *scheduler, rt_thread *thread, uint64_t end_time, uint64_t slack);
 
-static rt_thread_sim *rt_need_resched_logic(rt_simulator *simulator, rt_thread_sim *thread, uint64_t time);
+static rt_thread_sim *rt_need_resched_logic(rt_simulator *simulator, rt_thread_sim *thread, uint64_t time, int *failed);
 static uint64_t set_timer_logic(rt_simulator *simulator, rt_thread_sim *thread, uint64_t time);
 static void enqueue_thread_logic(rt_queue_sim *queue, rt_thread_sim *thread);
 static rt_thread_sim* dequeue_thread_logic(rt_queue_sim *queue);
@@ -1226,7 +1226,7 @@ static void sched_sim(void *scheduler) {
                     current_time = set_timer_logic(sim, next, current_time);
 
                     while (finished_max <= 1) {
-                        update_exit_logic(next);
+                        update_exit_logic(next, current_time);
                         rt_thread_sim *next = rt_need_resched_logic(sim, next, current_time, &failed);
                         if (next == max) {
                             finished_max++;
