@@ -1432,7 +1432,7 @@ static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler, r
     }
 
     int pos = simulator->runnable->size++;
-    simulator->runnable->threads[pos];
+    simulator->runnable->threads[pos] = new_sim;
 }
 
 static void free_threads_sim(rt_simulator *simulator) {
