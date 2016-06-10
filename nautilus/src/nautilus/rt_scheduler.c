@@ -1194,15 +1194,15 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
     nk_thread_id_t y;
     
     rt_constraints *constraints_first = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints per_constr_first = {(10000000000), (10000000)};
+    struct periodic_constraints per_constr_first = {(10000000), (1000000)};
     constraints_first->periodic = per_constr_first;
     
     rt_constraints *constraints_second = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints per_constr_second = {(5000000000), (5000000)};
+    struct periodic_constraints per_constr_second = {(500000000), (50000000)};
     constraints_second->periodic = per_constr_second;
     
     rt_constraints *constraints_third = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints per_constr_third = {(250000000), (250000)};
+    struct periodic_constraints per_constr_third = {(2500000), (250000)};
     constraints_third->periodic = per_constr_third;
     
     rt_constraints *constraints_fifth = (rt_constraints *)malloc(sizeof(rt_constraints));
@@ -1210,11 +1210,11 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
     constraints_fifth->periodic = per_constr_fifth;
     
     rt_constraints *constraints_six = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints per_constr_six = {(5000000000), (5000000)};
+    struct periodic_constraints per_constr_six = {(50000000), (5000000)};
     constraints_six->periodic = per_constr_six;
     
     rt_constraints *constraints_seven = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints per_constr_seven = {(5000000000), (5000000)};
+    struct periodic_constraints per_constr_seven = {(50000000), (5000000)};
     constraints_seven->periodic = per_constr_seven;
     
     rt_constraints *constraints_fourth = (rt_constraints *)malloc(sizeof(rt_constraints));
@@ -1222,7 +1222,7 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
     constraints_fourth->aperiodic = aper_constr;
     
     rt_constraints *constraints_eighth = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints per_constr_eighth = {(500000000000), (500000000)};
+    struct periodic_constraints per_constr_eighth = {(50000000000), (500000000)};
     constraints_eighth->periodic = per_constr_eighth;
 
     uint64_t first = 1, second = 2, third = 3, fourth = 4, five = 5, six = 6, seven = 7, eight = 8;
