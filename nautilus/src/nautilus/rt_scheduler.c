@@ -46,7 +46,7 @@
 #define SPORADIC 1
 #define PERIODIC 2
 
-#define PERIODIC_UTIL 65000
+#define PERIODIC_UTIL 55000
 #define SPORADIC_UTIL 18000
 #define APERIODIC_UTIL 9000
 
@@ -96,6 +96,7 @@ static inline void update_periodic(rt_thread *t);
 static void set_timer(rt_scheduler *scheduler, rt_thread *thread, uint64_t end_time, uint64_t slack);
 
 static rt_thread_sim *rt_need_resched_logic(rt_simulator *simulator, rt_thread_sim *thread, uint64_t time, int *failed);
+
 static uint64_t set_timer_logic(rt_simulator *simulator, rt_thread_sim *thread, uint64_t time);
 static void enqueue_thread_logic(rt_queue_sim *queue, rt_thread_sim *thread);
 static rt_thread_sim* dequeue_thread_logic(rt_queue_sim *queue);
@@ -103,7 +104,7 @@ static inline void update_exit_logic(rt_thread_sim *t, uint64_t time);
 static inline void update_enter_logic(rt_thread_sim *t, uint64_t time);
 static int check_deadlines_logic(rt_thread_sim *t, uint64_t time);
 static inline void update_periodic_logic(rt_thread_sim *t, uint64_t time);
-static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler, rt_thread *new);
+static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler, rt_thread *new, rt_thread *this);
 static void free_threads_sim(rt_simulator *simulator);
 
 static rt_thread_sim* max_periodic(rt_simulator *simulator);
@@ -1220,7 +1221,7 @@ static void sched_sim(void *scheduler) {
 
                 int admission_check = rt_admit(sched, new);
                 if (admission_check) {
-                    copy_threads_sim(sim, sched, new);
+                    copy_threads_sim(sim, sched, new, this);
                     int i = 0;
                     for (i = 0; i < sim->runnable->size; i++) {
                         printk("Runnable deadline %d is %llu\n", i, sim->runnable->threads[i]->deadline);
@@ -1336,7 +1337,7 @@ static rt_thread_sim* min_periodic(rt_simulator *simulator) {
     return min_thread;
 }
 
-static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler, rt_thread *new) {
+static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler, rt_thread *new, rt_thread *this) {
     int i;
 
     for (i = 0; i < scheduler->runnable->size; i++) {
@@ -1438,6 +1439,33 @@ static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler, r
     }
 
     enqueue_thread_logic(simulator->runnable, new_sim);
+
+    rt_thread_sim *sched_per = (rt_thread_sim *)malloc(sizeof(rt_thread_sim));
+    sched_per->type = this->type;
+    sched_per->q_type = RUNNABLE_QUEUE;
+    sched_per->status = ADMITTED;
+
+    rt_constraints *constraints = (rt_constraints *)malloc(sizeof(rt_constraints));
+    if (this->type == PERIODIC) {
+        struct periodic_constraints constr = {(this->constraints->periodic.period), (this->constraints->periodic.slice)};
+        constraints->periodic = constr;
+    } else if (this->type == SPORADIC) {
+        struct sporadic_constraints constr = {(this->constraints->sporadic.work)};
+        constraints->sporadic = constr;
+    }
+    sched_per->constraints = constraints;
+    sched_per->start_time = 0;
+    sched_per->run_time = 0;
+    sched_per->exit_time = 0;
+
+    if (sched_per->type == PERIODIC) {
+        printk("Initial deadline is %llu\n", sched_per->deadline);
+        sched_per->deadline = constraints->periodic.period; 
+    } else {
+        sched_per->deadline = constraints->sporadic.work;
+    }
+
+    enqueue_thread_logic(simulator->runnable, sched_per);
 }
 
 static void free_threads_sim(rt_simulator *simulator) {
