@@ -1883,6 +1883,7 @@ nk_thread_start_sim (nk_thread_fun_t fun,
     rt_thread *rt = rt_thread_init(rt_type, rt_constraints, rt_deadline, newthread);
     struct sys_info *sys = per_cpu_get(system);
     if (sys->cpus[cpu]->rt_sched) {
+        rt->status = ADMITTED;
         enqueue_thread(sys->cpus[cpu]->rt_sched->runnable, rt);
     }
     nk_schedule();
