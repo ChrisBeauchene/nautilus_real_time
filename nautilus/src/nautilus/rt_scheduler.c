@@ -1212,7 +1212,6 @@ static void sched_sim(void *scheduler) {
                 
                 uint64_t current_time = 0;
 
-                rt_thread_sim *max = max_periodic(sim);
                 int finished_max = 0;
                 int failed = 0;
 
@@ -1220,6 +1219,7 @@ static void sched_sim(void *scheduler) {
                 if (admission_check) {
                     copy_threads_sim(sim, sched, new);
                     rt_thread_sim *next = min_periodic(sim);
+                    rt_thread_sim *max = max_periodic(sim);
                     current_time += (context_time +sched_time);
 
                     update_enter_logic(next, current_time);
