@@ -224,6 +224,7 @@ rt_thread* list_remove(rt_list *l, rt_thread *t) {
             }
             n->next = NULL;
             n->prev = NULL;
+            n->status = REMOVED;
             return n->thread;
         }
     }
