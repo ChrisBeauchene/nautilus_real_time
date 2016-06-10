@@ -1410,7 +1410,7 @@ static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler, r
         enqueue_thread_logic(simulator->runnable, d);
     }
 
-    rt_thread_sim *new_sim = (rt_thread_sim *)malloc(sizeof(rt_thread_sim *));
+    rt_thread_sim *new_sim = (rt_thread_sim *)malloc(sizeof(rt_thread_sim));
     new_sim->type = new->type;
     new_sim->q_type = RUNNABLE_QUEUE;
     new_sim->status = ADMITTED;
