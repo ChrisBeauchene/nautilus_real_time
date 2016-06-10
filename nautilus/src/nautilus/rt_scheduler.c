@@ -1158,12 +1158,31 @@ static void test_real_time(void *in)
 
 void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
     nk_thread_id_t sched;
-    
+    nk_thread_id_t test;
+
     rt_constraints *constraints_first = (rt_constraints *)malloc(sizeof(rt_constraints));
     struct periodic_constraints per_constr_first = {sched_period, sched_slice_time};
     constraints_first->periodic = per_constr_first;
 
     nk_thread_start_sim((nk_thread_fun_t)sched_sim, NULL, NULL, 0, 0, &sched, my_cpu_id(), PERIODIC, constraints_first, 0);
+
+    rt_constraints *c = (rt_constraints *)malloc(sizeof(rt_constraints));
+    struct periodic_constraints p = {1000000, 100000};
+    c->periodic = p;
+
+    nk_thread_start_sim((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test, my_cpu_id(), PERIODIC, c, 0);
+
+}
+
+static int test_sum(void) {
+    const int size = 100000;
+    int sum = 0;
+
+    for (i = 0; i < size; i++) {
+        sum += i;
+    }
+
+    return sum;
 }
 
 static void sched_sim(void *scheduler) {
@@ -1189,6 +1208,7 @@ static void sched_sim(void *scheduler) {
                 }
             }
         }
+
 
         rt_thread *d = list_dequeue(sched->exited);
         while (d != NULL) {
