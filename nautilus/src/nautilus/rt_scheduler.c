@@ -1220,8 +1220,9 @@ static void sched_sim(void *scheduler) {
                     copy_threads_sim(sim, sched, new);
                     int i = 0;
                     for (i = 0; i < sim->runnable->size; i++) {
-                        printk("Runnable deadline %d is %llu\n", i, sim->runnable->threads[i]);
+                        printk("Runnable deadline %d is %llu\n", i, sim->runnable->threads[i]->deadline);
                     }
+
                     rt_thread_sim *next = min_periodic(sim);
                     rt_thread_sim *max = max_periodic(sim);
                     current_time += (context_time +sched_time);
