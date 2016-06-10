@@ -1030,7 +1030,10 @@ int rt_admit(rt_scheduler *scheduler, rt_thread *thread)
     if (thread->type == PERIODIC)
     {
         uint64_t per_util = get_per_util(scheduler->runnable, scheduler->pending);
+
         printk("UTIL FACTOR =  \t%llu\n", per_util);
+        printk("NEW UTIL FACTOR =  \t%llu\n", per_util + (thread->constraints->periodic.slice * 100000) / thread->constraints->periodic.period));
+        
         
         if ((per_util + (thread->constraints->periodic.slice * 100000) / thread->constraints->periodic.period) > PERIODIC_UTIL) {
             RT_SCHED_ERROR("PERIODIC: Admission denied utilization factor overflow!\n");
