@@ -1470,7 +1470,7 @@ static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_s
         if (simulator->pending->threads[0]->deadline < time)
         {
             rt_thread_sim *arrived_thread = dequeue_thread_logic(simulator->pending);
-            update_periodic_logic(thread, time);
+            update_periodic_logic(arrived_thread, time);
             enqueue_thread_logic(simulator->runnable, arrived_thread);
             continue;
         } else
