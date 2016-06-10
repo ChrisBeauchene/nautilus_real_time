@@ -1182,11 +1182,14 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
 }
 
 static int test_sum(void) {
-    const int size = 1000;
+    const int size = 100;
     int sum = 0, i = 0;
 
+    udelay(1000);
     for (i = 0; i < size; i++) {
         sum += i;
+        udelay(1000);
+        printk("INSIDE TEST FUNCTION.\n");
     }
 
     return sum;
@@ -1233,7 +1236,6 @@ static void sched_sim(void *scheduler) {
                     while (finished_max <= 1) {
                         update_exit_logic(next, current_time);
                         next = rt_need_resched_logic(sim, next, current_time, &failed);
-                        printk("Time is %llu\n", current_time);
                         if (next == max) {
                             finished_max++;
                         }
