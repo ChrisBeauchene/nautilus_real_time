@@ -1239,12 +1239,18 @@ static void sched_sim(void *scheduler) {
                     while (finished_max <= 1) {
                         update_exit_logic(next, current_time);
                         next = rt_need_resched_logic(sim, next, current_time, &failed);
+
                         if (next == max) {
                             finished_max++;
                         }
                         if (failed) break;
 
                         current_time += (context_time + sched_time);
+
+                        if (next->start_time == 0) {
+                            next->deadline += current_time;
+                        }
+                        
                         update_enter_logic(next, current_time);
                         current_time += set_timer_logic(sim, next, current_time);
                     }
