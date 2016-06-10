@@ -1216,13 +1216,12 @@ static void sched_sim(void *scheduler) {
         rt_thread *d = list_dequeue(sched->exited);
         while (d != NULL) {
             rt_thread *e = NULL;
-            if (d->status == ADMITTED) {
-                d->status = TOBE_REMOVED;
+            if (d->status == TOBE_REMOVED) {
                 e = remove_thread(d); 
-
             } else if (d->status == SLEEPING) {
-                d->status = TOBE_REMOVED;
                 e = list_remove(sched->sleeping, d);
+            } else {
+
             }
 
             if (d->status != REMOVED && e == NULL) {
@@ -1565,7 +1564,9 @@ static inline uint64_t umin(uint64_t x, uint64_t y)
 }
 
 void rt_thread_exit(rt_thread *thread) {
-    thread->status = TOBE_REMOVED;
+    if (thread->status != SLEEPING) {
+        thread->status = TOBE_REMOVED;
+    }
     struct sys_info *sys = per_cpu_get(system);
     rt_scheduler *sched = sys->cpus[my_cpu_id()]->rt_sched;
     list_enqueue(sched->exited, thread);
