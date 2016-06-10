@@ -923,7 +923,7 @@ out:
         goto out;
     } else {
         while (*(volatile int*)&thethread->status != NK_THR_EXITED) {
-            nk_wait(t);
+    
         }
     }
     if (retval) {
@@ -979,6 +979,7 @@ nk_join_all_children (int (*func)(void * res))
     #else
     rt_thread *rt = me->rt_thread;
     rt_thread *n = list_dequeue(rt->children);
+    
     while (n != NULL) {
          if (nk_join(n->thread, &res) < 0) {
             ERROR_PRINT("Could not join child thread (t=%p)\n", elm);
@@ -1128,6 +1129,8 @@ nk_thread_queue_sleep (nk_thread_queue_t * q)
     irq_enable_restore(flags);
     return 0;
 }
+
+
 
 #ifdef NAUT_CONFIG_USE_RT_SCHEDULER
 int sleep_on_queue(rt_thread *sleep) {
