@@ -1230,7 +1230,7 @@ static void sched_sim(void *scheduler) {
                     next->deadline += current_time;
 
                     update_enter_logic(next, current_time);
-                    current_time = set_timer_logic(sim, next, current_time);
+                    current_time += set_timer_logic(sim, next, current_time);
                     
 
                     while (finished_max <= 1) {
@@ -1244,7 +1244,7 @@ static void sched_sim(void *scheduler) {
 
                         current_time += (context_time + sched_time);
                         update_enter_logic(next, current_time);
-                        current_time = set_timer_logic(sim, next, current_time);
+                        current_time += set_timer_logic(sim, next, current_time);
                     }
 
                     if (failed) {
