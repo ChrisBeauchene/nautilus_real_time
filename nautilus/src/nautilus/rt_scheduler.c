@@ -1241,7 +1241,7 @@ static void sched_sim(void *scheduler) {
                     if (failed) {
                          RT_SCHED_ERROR("THREAD DENIED ENTRY.\n");
                     } else {
-                        printk("SUCCEEDED\n");
+                        enqueue_thread(sched->runnable, new);
                     }
 
                     free_threads_sim(sim);
