@@ -1725,8 +1725,12 @@ static inline uint64_t umin(uint64_t x, uint64_t y)
 }
 
 void rt_thread_exit(rt_thread *thread) {
-    
+
     while (thread->status == ARRIVED);
+    
+    if (thread->status == DENIED) {
+        return;
+    }
 
     if (thread->status != SLEEPING) {
         thread->status = TOBE_REMOVED;
