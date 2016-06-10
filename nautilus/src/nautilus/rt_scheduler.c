@@ -1414,6 +1414,7 @@ static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler, r
         enqueue_thread_logic(simulator->runnable, d);
     }
 
+    printk("SCHEDULER APERIODIC SIZE IS %d\n", scheduler->aperiodic->size);
     for (i = 0; i < simulator->aperiodic->size; i++) {
         rt_thread *s = scheduler->aperiodic->threads[i];
         rt_thread_sim *d = (rt_thread_sim *)malloc(sizeof(rt_thread_sim));
