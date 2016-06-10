@@ -1221,6 +1221,8 @@ static void sched_sim(void *scheduler) {
 
                 int admission_check = rt_admit(sched, new);
                 if (admission_check) {
+                    nk_thread_t *me = get_cur_thread();
+                    rt_thread *this = me->rt_thread;
                     copy_threads_sim(sim, sched, new, this);
                     int i = 0;
                     for (i = 0; i < sim->runnable->size; i++) {
