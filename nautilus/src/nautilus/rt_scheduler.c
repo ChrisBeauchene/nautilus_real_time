@@ -1285,8 +1285,6 @@ static void sched_sim(void *scheduler) {
 
                     rt_thread_sim *next = min_periodic(sim);
                     rt_thread_sim *max = max_periodic(sim);
-                    printk("NEXT DEADLINE IS %llu\n", next->deadline);
-                    printk("MAX DEADLINE IS %llu\n", max->deadline);
                     update_enter_logic(next, current_time);
                     current_time += set_timer_logic(sim, next, current_time);
                     
@@ -1487,7 +1485,6 @@ static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler, r
     new_sim->exit_time = 0;
 
     if (new_sim->type == PERIODIC) {
-        printk("Initial deadline is %llu\n", new_sim->deadline);
         new_sim->deadline = constraints->periodic.period; 
     } else {
         new_sim->deadline = constraints->sporadic.work;
@@ -1514,7 +1511,6 @@ static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler, r
     sched_per->exit_time = 0;
 
     if (sched_per->type == PERIODIC) {
-        printk("Initial deadline is %llu\n", sched_per->deadline);
         sched_per->deadline = constraints->periodic.period; 
     } else {
         sched_per->deadline = constraints->sporadic.work;
@@ -1619,6 +1615,9 @@ static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_s
                     return next;
                 }
                 next = dequeue_thread_logic(simulator->aperiodic);
+                if (next == NULL) {
+                    return thread;
+                }
                 return next;
             } else {
                 if (simulator->runnable->size > 0)
