@@ -1227,7 +1227,7 @@ static void sched_sim(void *scheduler) {
 
                     while (finished_max <= 1) {
                         update_exit_logic(next, current_time);
-                        rt_thread_sim *next = rt_need_resched_logic(sim, next, current_time, &failed);
+                        next = rt_need_resched_logic(sim, next, current_time, &failed);
                         if (next == max) {
                             finished_max++;
                         }
