@@ -911,8 +911,22 @@ out:
 }
 #else
 {
-
-    return 0;
+    nk_thread_t *thethread = (nk_thread_t *)t;
+    if (thethread->statues == NK_THR_EXITED) {
+        if (thethread->output) {
+            *retval = thethread->output;
+        }
+        goto out;
+    } else {
+        while (*(volatile int*)&thethread->status != NK_THR_EXITED) {
+            nk_wait(t);
+        }
+    }
+    if (retval) {
+        *retval = thethread->output;
+    }
+out:
+    thread_detach(thethread);
 }
 #endif
 
@@ -932,7 +946,6 @@ out:
  */
 int
 nk_join_all_children (int (*func)(void * res))
-#ifndef NAUT_CONFIG_USE_RT_SCHEDULER
 {
     nk_thread_t * elm = NULL;
     nk_thread_t * tmp = NULL;
@@ -940,6 +953,7 @@ nk_join_all_children (int (*func)(void * res))
     void * res               = NULL;
     int ret                  = 0;
     
+    #ifndef NAUT_CONFIG_USE_RT_SCHEDULER
     list_for_each_entry_safe(elm, tmp, &(me->children), child_node) {
         
         if (nk_join(elm, &res) < 0) {
@@ -957,14 +971,30 @@ nk_join_all_children (int (*func)(void * res))
         }
         
     }
+    #else
+    rt_thread *rt = me->rt_thread;
+    rt_thread *n = list_dequeue(rt->children);
+    while (n != NULL) {
+         if (nk_join(n->thread, &res) < 0) {
+            ERROR_PRINT("Could not join child thread (t=%p)\n", elm);
+            ret = -1;
+            n = list_dequeue(rt->children);
+            continue;
+        }
+
+        if (func) {
+            if (func(res) < 0) {
+                ERROR_PRINT("Could not invoke destructo for child thread (t=%p)\n", elm);
+                ret = -1;
+                n = list_dequeue(rt->children);
+                continue;
+            }
+        }
+    } 
     
     return ret;
 }
-#else
-{
-    return 0;
-}
-#endif
+
 
 
 /*
@@ -1048,9 +1078,10 @@ nk_yield (void)
     rt_thread *rt = me->rt_thread;
 
     rt_thread_exit(rt);
-    while (rt->status != REMOVED);      
+    while (rt->status != REMOVED);
+
     rt->type = ARRIVED;
-    enqueue_thread(sched->arrival, rt);
+    list_enqueue(sched->arrival, rt);
     nk_schedule();
 }
 #endif
