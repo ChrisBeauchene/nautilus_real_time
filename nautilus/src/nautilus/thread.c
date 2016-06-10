@@ -840,7 +840,6 @@ nk_thread_destroy (nk_thread_id_t t)
 #ifdef NAUT_CONFIG_USE_RT_SCHEDULER
     nk_thread_exit(thethread);
 #endif
-    
 
 #ifndef NAUT_CONFIG_USE_RT_SCHEDULER
     ASSERT(!irqs_enabled());
@@ -856,6 +855,7 @@ nk_thread_destroy (nk_thread_id_t t)
      * (waiters should already have been notified */
     nk_thread_queue_destroy(thethread->waitq);
     
+
     free(thethread->stack);
     free(thethread);
 
@@ -979,7 +979,7 @@ nk_join_all_children (int (*func)(void * res))
     #else
     rt_thread *rt = me->rt_thread;
     rt_thread *n = list_dequeue(rt->children);
-    
+
     while (n != NULL) {
          if (nk_join(n->thread, &res) < 0) {
             ERROR_PRINT("Could not join child thread (t=%p)\n", elm);

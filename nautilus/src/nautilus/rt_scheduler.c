@@ -591,6 +591,11 @@ rt_thread* dequeue_thread(rt_queue *queue)
         }
         
         queue->threads[now] = last;
+
+        if (min->status == TOBE_REMOVED) {
+            min->status = REMOVED;
+            return dequeue_thread(queue);
+        }
         
         return min;
     } else if (queue->type == PENDING_QUEUE)
@@ -623,6 +628,11 @@ rt_thread* dequeue_thread(rt_queue *queue)
         }
         
         queue->threads[now] = last;
+
+        if (min->status == TOBE_REMOVED) {
+            min->status = REMOVED;
+            return dequeue_thread(queue);
+        }
         
         return min;
     } else if (queue->type == APERIODIC_QUEUE)
@@ -655,6 +665,11 @@ rt_thread* dequeue_thread(rt_queue *queue)
         }
         
         queue->threads[now] = last;
+
+        if (min->status == TOBE_REMOVED) {
+            min->status = REMOVED;
+            return dequeue_thread(queue);
+        }
         
         return min;
     }
