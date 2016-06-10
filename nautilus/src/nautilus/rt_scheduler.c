@@ -1226,9 +1226,6 @@ static void sched_sim(void *scheduler) {
                     rt_thread_sim *next = min_periodic(sim);
                     rt_thread_sim *max = max_periodic(sim);
 
-                    current_time += (context_time +sched_time);
-                    next->deadline += current_time;
-
                     update_enter_logic(next, current_time);
                     current_time += set_timer_logic(sim, next, current_time);
                     
@@ -1471,6 +1468,7 @@ static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_s
         if (simulator->pending->threads[0]->deadline < time)
         {
             rt_thread_sim *arrived_thread = dequeue_thread_logic(simulator->pending);
+            update_periodic(thread, time);
             enqueue_thread_logic(simulator->runnable, arrived_thread);
             continue;
         } else
