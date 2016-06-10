@@ -1464,7 +1464,8 @@ static void free_threads_sim(rt_simulator *simulator) {
 static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_sim *thread, uint64_t time, int *failed)
 {
     printk("Inside simulator logic.\n");
-    rt_thread_sim *next;
+    rt_thread_sim *next = NULL;
+
     while (simulator->pending->size > 0)
     {
         if (simulator->pending->threads[0]->deadline < time)
