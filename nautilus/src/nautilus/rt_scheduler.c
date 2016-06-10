@@ -1176,7 +1176,7 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
 
     printk("Starting thread.\n");
     nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test, my_cpu_id(), PERIODIC, c, 0);
-    nk_join(test, NULL);
+    // nk_join(test, NULL);
     printk("Joined test thread.\n");
 
 }
