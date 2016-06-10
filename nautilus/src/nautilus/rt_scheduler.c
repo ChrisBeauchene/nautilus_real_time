@@ -1170,6 +1170,8 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
     nk_thread_id_t test4;
     nk_thread_id_t test5;
 
+    int test0_out;
+
     rt_constraints *constraints_first = (rt_constraints *)malloc(sizeof(rt_constraints));
     struct periodic_constraints per_constr_first = {sched_period, sched_slice_time};
     constraints_first->periodic = per_constr_first;
@@ -1181,13 +1183,13 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
     c->periodic = p;
 
     printk("Starting thread.\n");
-    nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test0, my_cpu_id(), PERIODIC, c, 0);
+    nk_thread_start((nk_thread_fun_t)test_sum, &test0_out, NULL, 0, 0, &test0, my_cpu_id(), PERIODIC, c, 0);
     nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test1, my_cpu_id(), PERIODIC, c, 0);
     nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test2, my_cpu_id(), PERIODIC, c, 0);
     nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test3, my_cpu_id(), PERIODIC, c, 0);
     nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test4, my_cpu_id(), PERIODIC, c, 0);
     nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test5, my_cpu_id(), PERIODIC, c, 0);
-    nk_join(test, NULL);
+    nk_join(test0, &test0_out);
     printk("Joined test thread.\n");
 
 }
