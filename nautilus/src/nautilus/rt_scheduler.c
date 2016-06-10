@@ -1558,6 +1558,7 @@ static inline void update_enter_logic(rt_thread_sim *t, uint64_t time)
 static int check_deadlines_logic(rt_thread_sim *t, uint64_t time)
 {
     if (time > t->deadline) {
+        printk("INSIDE CHECK DEADLINES LOGIC. TIME IS %llu AND DEADLINE IS %llu\n", time, t->deadline);
         return 1;
     }
     return 0;
