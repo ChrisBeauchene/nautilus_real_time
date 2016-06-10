@@ -121,6 +121,7 @@ static rt_list* rt_list_init();
 static rt_node* rt_node_init(rt_thread *t);
 
 static void sched_sim(void *scheduler);
+static int test_sum(void);
 
 rt_thread* rt_thread_init(int type,
                           rt_constraints *constraints,
