@@ -1209,7 +1209,7 @@ static void sched_sim(void *scheduler) {
                 uint64_t context_time = 1000;
 
                 uint64_t sched_time = sched->run_time;
-                
+                printk("Sched time is %llu\n", sched_time);
                 uint64_t current_time = 0;
 
                 int finished_max = 0;
