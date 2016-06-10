@@ -1228,7 +1228,7 @@ static void sched_sim(void *scheduler) {
                     while (finished_max <= 1) {
                         update_exit_logic(next, current_time);
                         next = rt_need_resched_logic(sim, next, current_time, &failed);
-                        printk("In loop.\n");
+                        printk("deadline is %llu\n", next->deadline);
                         if (next == max) {
                             finished_max++;
                         }
