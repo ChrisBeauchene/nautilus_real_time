@@ -1176,7 +1176,7 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
 
 static int test_sum(void) {
     const int size = 100000;
-    int sum = 0;
+    int sum = 0, i = 0;
 
     for (i = 0; i < size; i++) {
         sum += i;
