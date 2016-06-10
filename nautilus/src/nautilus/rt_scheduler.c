@@ -1285,7 +1285,8 @@ static void sched_sim(void *scheduler) {
 
                     rt_thread_sim *next = min_periodic(sim);
                     rt_thread_sim *max = max_periodic(sim);
-
+                    printk("NEXT DEADLINE IS %llu\n", next->deadline);
+                    printk("MAX DEADLINE IS %llu\n", max->deadline);
                     update_enter_logic(next, current_time);
                     current_time += set_timer_logic(sim, next, current_time);
                     
