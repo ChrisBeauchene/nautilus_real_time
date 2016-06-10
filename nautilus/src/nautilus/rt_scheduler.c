@@ -55,6 +55,7 @@
 #define TOBE_REMOVED 2
 #define REMOVED 3
 #define SLEEPING 4
+#define DENIED 5
 
 #define RUNNABLE_QUEUE 0
 #define PENDING_QUEUE 1
@@ -1185,7 +1186,6 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
     nk_thread_id_t test4;
     nk_thread_id_t test5;
 
-    void** test0_out;
 
     rt_constraints *constraints_first = (rt_constraints *)malloc(sizeof(rt_constraints));
     struct periodic_constraints per_constr_first = {sched_period, sched_slice_time};
@@ -1198,13 +1198,13 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
     c->periodic = p;
 
     printk("Starting thread.\n");
-    nk_thread_start((nk_thread_fun_t)test_sum, test0_out, NULL, 0, 0, &test0, my_cpu_id(), PERIODIC, c, 0);
+    nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test0, my_cpu_id(), PERIODIC, c, 0);
     nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test1, my_cpu_id(), PERIODIC, c, 0);
     nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test2, my_cpu_id(), PERIODIC, c, 0);
     nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test3, my_cpu_id(), PERIODIC, c, 0);
     nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test4, my_cpu_id(), PERIODIC, c, 0);
     nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test5, my_cpu_id(), PERIODIC, c, 0);
-    nk_join(test0, test0_out);
+    nk_join(test0, NULL);
     printk("Joined test thread.\n");
 
 }
@@ -1279,6 +1279,7 @@ static void sched_sim(void *scheduler) {
 
                     if (failed) {
                          RT_SCHED_ERROR("THREAD DENIED ENTRY.\n");
+                         new->status = DENIED;
                     } else {
                         printk("THREAD ADMITTED\n");
                         enqueue_thread(sched->runnable, new);
@@ -1724,6 +1725,9 @@ static inline uint64_t umin(uint64_t x, uint64_t y)
 }
 
 void rt_thread_exit(rt_thread *thread) {
+    
+    while (thread->status == ARRIVED);
+
     if (thread->status != SLEEPING) {
         thread->status = TOBE_REMOVED;
     }

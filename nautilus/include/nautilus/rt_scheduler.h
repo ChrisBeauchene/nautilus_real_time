@@ -31,7 +31,7 @@ typedef union rt_constraints {
 
 typedef enum { APERIODIC = 0, SPORADIC = 1, PERIODIC = 2} rt_type;
 typedef enum { RUNNABLE_QUEUE = 0, PENDING_QUEUE = 1, APERIODIC_QUEUE = 2} queue_type;
-typedef enum { ARRIVED = 0, ADMITTED = 1, TOBO_REMOVED = 2, REMOVED = 3, SLEEPING = 4} rt_status;
+typedef enum { ARRIVED = 0, ADMITTED = 1, TOBO_REMOVED = 2, REMOVED = 3, SLEEPING = 4, DENIED = 5} rt_status;
 
 struct rt_thread;
 
