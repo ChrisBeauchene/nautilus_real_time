@@ -103,7 +103,7 @@ static inline void update_exit_logic(rt_thread_sim *t, uint64_t time);
 static inline void update_enter_logic(rt_thread_sim *t, uint64_t time);
 static int check_deadlines_logic(rt_thread_sim *t, uint64_t time);
 static inline void update_periodic_logic(rt_thread_sim *t, uint64_t time);
-static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler);
+static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler, rt_thread *new);
 static void free_threads_sim(rt_simulator *simulator);
 
 static rt_thread_sim* max_periodic(rt_simulator *simulator);
@@ -1427,6 +1427,7 @@ static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler, r
     } else {
         new_sim->deadline = constraints->sporadic.work;
     }
+
     int pos = simulator->runnable->size++;
     simulator->runnable->threads[pos];
 }
