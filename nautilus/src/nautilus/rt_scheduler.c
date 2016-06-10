@@ -1604,6 +1604,7 @@ static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_s
         case PERIODIC:
             if (thread->run_time >= thread->constraints->periodic.slice) {
                 if (thread == max) {
+                    printk("INC MAX\n");
                     (*finished_max)++;
                 }
                 if (check_deadlines_logic(thread, time)) {
