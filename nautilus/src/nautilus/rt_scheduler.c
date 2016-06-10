@@ -1428,6 +1428,7 @@ static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler, r
     new_sim->exit_time = 0;
 
     if (new_sim->type == PERIODIC) {
+        printk("Initial deadline is %llu\n", next->deadline);
         new_sim->deadline = constraints->periodic.period; 
     } else {
         new_sim->deadline = constraints->sporadic.work;
