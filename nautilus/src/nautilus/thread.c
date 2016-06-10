@@ -833,7 +833,10 @@ nk_thread_destroy (nk_thread_id_t t)
     
     SCHED_DEBUG("Destroying thread (%p, tid=%lu)\n", (void*)thethread, thethread->tid);
 
+#ifdef NAUT_CONFIG_USE_RT_SCHEDULER
     nk_thread_exit(thethread);
+#endif
+    
 
 #ifndef NAUT_CONFIG_USE_RT_SCHEDULER
     ASSERT(!irqs_enabled());
@@ -908,8 +911,7 @@ out:
 }
 #else
 {
-    nk_thread_t *thethread = (nk_thread_t*)t;
-    thread_detach(thethread);
+
     return 0;
 }
 #endif
