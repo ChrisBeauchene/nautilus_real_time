@@ -1883,9 +1883,26 @@ nk_thread_start_sim (nk_thread_fun_t fun,
     
     thread_setup_init_stack(newthread, fun, input);
 
+
+
 #ifdef NAUT_CONFIG_USE_RT_SCHEDULER
     rt_thread *rt = rt_thread_init(rt_type, rt_constraints, rt_deadline, newthread);
     struct sys_info *sys = per_cpu_get(system);
+    rt_thread *rt = rt_thread_init(rt_type, rt_constraints, rt_deadline, newthread);
+    nk_thread_t *parent = get_cur_thread();
+    if (parent != NULL) {
+        rt->parent = parent->rt_thread;
+
+        // Put myself on the parent's child list
+        if (parent->rt_thread != NULL) {
+            list_enqueue(parent->rt_thread->children, rt);
+        } else {
+            printk("THE CURRENT THREAD HAS NO REAL-TIME THREAD.\n");
+        }
+    } else {
+        rt->parent = NULL;
+    }
+
     if (sys->cpus[cpu]->rt_sched) {
         rt->status = ADMITTED;
         enqueue_thread(sys->cpus[cpu]->rt_sched->runnable, rt);
