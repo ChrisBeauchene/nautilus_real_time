@@ -808,10 +808,14 @@ nk_thread_exit (void * retval)
     rt_thread *rt = me->rt_thread;
 
     tls_exit();
+    nk_join_all_children(NULL);
+    me->output      = retval;
+    me->status      = NK_THR_EXITED;
     nk_wake_waiters();
 
     rt_thread_exit(rt);
     while (rt->status != REMOVED);
+    nk_schedule();
 
 }
 #endif
