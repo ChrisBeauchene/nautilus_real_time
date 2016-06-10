@@ -1516,10 +1516,10 @@ static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_s
         case PERIODIC:
             if (thread->run_time >= thread->constraints->periodic.slice) {
                 if (check_deadlines_logic(thread, time)) {
+                    *failed = 1;
                     update_periodic_logic(thread, time);
                     enqueue_thread_logic(simulator->runnable, thread);
                 } else {
-                    *failed = 1;
                     enqueue_thread_logic(simulator->pending, thread);
                 }
                 if (simulator->runnable->size > 0) {
