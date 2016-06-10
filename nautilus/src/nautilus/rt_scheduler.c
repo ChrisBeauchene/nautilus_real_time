@@ -96,7 +96,7 @@ static int check_deadlines(rt_thread *t);
 static inline void update_periodic(rt_thread *t);
 static void set_timer(rt_scheduler *scheduler, rt_thread *thread, uint64_t end_time, uint64_t slack);
 
-static rt_thread_sim *rt_need_resched_logic(rt_simulator *simulator, rt_thread_sim *thread, uint64_t time, int *failed);
+static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_sim *thread, uint64_t time, int *failed, int *finished_max, rt_thread_sim *max);
 
 static uint64_t set_timer_logic(rt_simulator *simulator, rt_thread_sim *thread, uint64_t time);
 static void enqueue_thread_logic(rt_queue_sim *queue, rt_thread_sim *thread);
@@ -1178,14 +1178,6 @@ static void test_real_time(void *in)
 }
 
 void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
-    nk_thread_id_t sched;
-    nk_thread_id_t test0;
-    nk_thread_id_t test1;
-    nk_thread_id_t test2;
-    nk_thread_id_t test3;
-    nk_thread_id_t test4;
-    nk_thread_id_t test5;
-
 
     rt_constraints *constraints_first = (rt_constraints *)malloc(sizeof(rt_constraints));
     struct periodic_constraints per_constr_first = {sched_period, sched_slice_time};
@@ -1193,17 +1185,60 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
 
     nk_thread_start_sim((nk_thread_fun_t)sched_sim, NULL, NULL, 0, 0, &sched, my_cpu_id(), PERIODIC, constraints_first, 0);
 
-    rt_constraints *c = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints p = {1000000, 100000};
-    c->periodic = p;
 
-    printk("Starting thread.\n");
-    nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test0, my_cpu_id(), PERIODIC, c, 0);
-    nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test1, my_cpu_id(), PERIODIC, c, 0);
-    nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test2, my_cpu_id(), PERIODIC, c, 0);
-    nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test3, my_cpu_id(), PERIODIC, c, 0);
-    nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test4, my_cpu_id(), PERIODIC, c, 0);
-    nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test5, my_cpu_id(), PERIODIC, c, 0);
+
+    nk_thread_id_t r;
+    nk_thread_id_t s;
+    nk_thread_id_t t;
+    nk_thread_id_t u;
+    nk_thread_id_t v;
+    nk_thread_id_t w;
+    nk_thread_id_t x;
+    nk_thread_id_t y;
+    
+    
+    
+    rt_constraints *constraints_first = (rt_constraints *)malloc(sizeof(rt_constraints));
+    struct periodic_constraints per_constr_first = {(10000000000), (10000000)};
+    constraints_first->periodic = per_constr_first;
+    
+    rt_constraints *constraints_second = (rt_constraints *)malloc(sizeof(rt_constraints));
+    struct periodic_constraints per_constr_second = {(5000000000), (5000000)};
+    constraints_second->periodic = per_constr_second;
+    
+    rt_constraints *constraints_third = (rt_constraints *)malloc(sizeof(rt_constraints));
+    struct periodic_constraints per_constr_third = {(250000000), (250000)};
+    constraints_third->periodic = per_constr_third;
+    
+    rt_constraints *constraints_fifth = (rt_constraints *)malloc(sizeof(rt_constraints));
+    struct periodic_constraints per_constr_fifth = {(500000000), (5000000)};
+    constraints_fifth->periodic = per_constr_fifth;
+    
+    rt_constraints *constraints_six = (rt_constraints *)malloc(sizeof(rt_constraints));
+    struct periodic_constraints per_constr_six = {(5000000000), (5000000)};
+    constraints_six->periodic = per_constr_six;
+    
+    rt_constraints *constraints_seven = (rt_constraints *)malloc(sizeof(rt_constraints));
+    struct periodic_constraints per_constr_seven = {(5000000000), (5000000)};
+    constraints_seven->periodic = per_constr_seven;
+    
+    rt_constraints *constraints_fourth = (rt_constraints *)malloc(sizeof(rt_constraints));
+    struct aperiodic_constraints aper_constr = {2};
+    constraints_fourth->aperiodic = aper_constr;
+    
+    rt_constraints *constraints_eighth = (rt_constraints *)malloc(sizeof(rt_constraints));
+    struct periodic_constraints per_constr_eighth = {(500000000000), (500000000)};
+    constraints_eighth->periodic = per_constr_eighth;
+
+    uint64_t first = 1, second = 2, third = 3, fourth = 4, five = 5, six = 6, seven = 7, eight = 8;
+    nk_thread_start((nk_thread_fun_t)test_real_time, (void *)first, NULL, 0, 0, &r, my_cpu_id(), PERIODIC, constraints_first, 0);
+    nk_thread_start((nk_thread_fun_t)test_real_time, (void *)second, NULL, 0, 0, &s, my_cpu_id(), PERIODIC, constraints_second, 0);
+    nk_thread_start((nk_thread_fun_t)test_real_time, (void *)third, NULL, 0, 0, &t, my_cpu_id(), PERIODIC, constraints_third, 0);
+    nk_thread_start((nk_thread_fun_t)test_real_time, (void *)five, NULL, 0, 0, &v, my_cpu_id(), PERIODIC, constraints_fifth, 0);
+    nk_thread_start((nk_thread_fun_t)test_real_time, (void *)six, NULL, 0, 0, &w, my_cpu_id(), PERIODIC, constraints_six, 0);
+    nk_thread_start((nk_thread_fun_t)test_real_time, (void *)seven, NULL, 0, 0, &x, my_cpu_id(), PERIODIC, constraints_seven, 0);
+    nk_thread_start((nk_thread_fun_t)test_real_time, (void *)fourth, NULL, 0, 0, &u, my_cpu_id(), APERIODIC, constraints_fourth, 0);
+    nk_thread_start((nk_thread_fun_t)test_real_time, (void *)eight, NULL, 0, 0, &y, my_cpu_id(), PERIODIC, constraints_eighth, 0);  
   
     printk("Joined test thread.\n");
 
@@ -1237,7 +1272,6 @@ static void sched_sim(void *scheduler) {
                 enqueue_thread(sched->aperiodic, new);
             } else {
                 uint64_t context_time = 1000;
-
                 uint64_t sched_time = sched->run_time;
                 printk("Sched time is %llu\n", sched_time);
                 uint64_t current_time = 0;
@@ -1260,16 +1294,9 @@ static void sched_sim(void *scheduler) {
 
                     while (finished_max <= 1) {
                         update_exit_logic(next, current_time);
-                        next = rt_need_resched_logic(sim, next, current_time, &failed);
-
-                        if (next == max) {
-                            finished_max++;
-                        }
+                        next = rt_need_resched_logic(sim, next, current_time, &failed, &finished_max, max);
                         if (failed) break;
-
                         current_time += (context_time + sched_time);
-
-
                         update_enter_logic(next, current_time);
                         current_time += set_timer_logic(sim, next, current_time);
                     }
@@ -1279,6 +1306,7 @@ static void sched_sim(void *scheduler) {
                          new->status = DENIED;
                     } else {
                         printk("THREAD ADMITTED\n");
+                        new->status = ADMITTED;
                         enqueue_thread(sched->runnable, new);
                     }
 
@@ -1517,7 +1545,7 @@ static void free_threads_sim(rt_simulator *simulator) {
     simulator->pending->size = 0;
 }
 
-static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_sim *thread, uint64_t time, int *failed)
+static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_sim *thread, uint64_t time, int *failed, int *finished_max, rt_thread_sim *max)
 {
     printk("Inside simulator logic.\n");
     rt_thread_sim *next = NULL;
@@ -1577,6 +1605,9 @@ static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_s
             
         case PERIODIC:
             if (thread->run_time >= thread->constraints->periodic.slice) {
+                if (thread == max) {
+                    (*finished_max)++;
+                }
                 if (check_deadlines_logic(thread, time)) {
                     *failed = 1;
                     update_periodic_logic(thread, time);
