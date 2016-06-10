@@ -109,7 +109,8 @@ static inline void update_periodic_logic(rt_thread_sim *t, uint64_t time);
 static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler);
 static void free_threads_sim(rt_simulator *simulator);
 
-static rt_thread* max_periodic(rt_scheduler *scheduler);
+static rt_thread_sim* max_periodic(rt_simulator *simulator);
+static rt_thread_sim* min_periodic(rt_simulator *simulator);
 
 static inline uint64_t get_min_per(rt_queue *runnable, rt_queue *queue, rt_thread *thread);
 static inline uint64_t get_avg_per(rt_queue *runnable, rt_queue *pending, rt_thread *thread);
@@ -1205,11 +1206,44 @@ static void sched_sim(void *scheduler) {
             if (new->type == APERIODIC) {
                 enqueue_thread(sched->aperiodic, new);
             } else {
+                uint64_t context_time = 1000;
+
+                uint64_t sched_time = sched->run_time;
+                
+                uint64_t current_time = 0;
+
+                rt_thread_sim *max = max_periodic(sim);
+                int finished_max = 0;
+                int failed = 0;
 
                 int admission_check = rt_admit(sched, new);
                 if (admission_check) {
                     copy_threads_sim(sim, sched);
-                    // ENQUEUE THREAD HERE
+                    rt_thread_sim *next = min_periodic(sim);
+                    current_time += (context_time +sched_time);
+
+                    update_enter_logic(next, current_time);
+                    current_time = set_timer_logic(sim, next, current_time);
+
+                    while (finished_max <= 1) {
+                        update_exit_logic(next);
+                        rt_thread_sim *next = rt_need_resched_logic(sim, next, current_time, &failed);
+                        if (next == max) {
+                            finished_max++;
+                        }
+                        if (failed) break;
+
+                        current_time += (context_time + sched_time);
+                        update_enter_logic(next, current_time);
+                        current_time = set_timer_logic(sim, next, current_time);
+                    }
+
+                    if (failed) {
+                         RT_SCHED_ERROR("THREAD DENIED ENTRY.\n");
+                    } else {
+                        printk("SUCCEEDED\n");
+                    }
+
                     free_threads_sim(sim);
                 }
             }
@@ -1219,12 +1253,13 @@ static void sched_sim(void *scheduler) {
         rt_thread *d = list_dequeue(sched->exited);
         while (d != NULL) {
             rt_thread *e = NULL;
+
             if (d->status == TOBE_REMOVED) {
                 e = remove_thread(d); 
-            } else if (d->status == SLEEPING) {
-                e = list_remove(sched->sleeping, d);
-            } else {
+            } 
 
+            if (d->status == SLEEPING) {
+                e = list_remove(sched->sleeping, d);
             }
 
             if (d->status != REMOVED && e == NULL) {
@@ -1236,14 +1271,14 @@ static void sched_sim(void *scheduler) {
     }
 }
 
-static rt_thread* max_periodic(rt_scheduler *scheduler) {
-    rt_queue *runnable = scheduler->runnable;
-    rt_queue *pending = scheduler->pending;
-    rt_thread *max_thread = NULL;  
+static rt_thread_sim* max_periodic(rt_simulator *simulator) {
+    rt_queue_sim *runnable = simulator->runnable;
+    rt_queue_sim *pending = simulator->pending;
+    rt_thread_sim *max_thread = NULL;  
     uint64_t max_period = 0;
     int i = 0;
     for (i = 0; i < runnable->size; i++) {
-        rt_thread *thread = runnable->threads[i];
+        rt_thread_sim *thread = runnable->threads[i];
         if (thread->type == PERIODIC) {
             if (thread->constraints->periodic.period > max_period) {
                 max_period = thread->constraints->periodic.period;
@@ -1253,7 +1288,7 @@ static rt_thread* max_periodic(rt_scheduler *scheduler) {
     }
     
     for (i = 0; i < pending->size; i++) {
-        rt_thread *thread = pending->threads[i];
+        rt_thread_sim *thread = pending->threads[i];
         if (thread->type == PERIODIC) {
             if (thread->constraints->periodic.period > max_period) {
                 max_period = thread->constraints->periodic.period;
@@ -1264,6 +1299,34 @@ static rt_thread* max_periodic(rt_scheduler *scheduler) {
     return max_thread;
 }
 
+static rt_thread_sim* min_periodic(rt_simulator *simulator) {
+    rt_queue_sim *runnable = simulator->runnable;
+    rt_queue_sim *pending = simulator->pending;
+    rt_thread_sim *min_thread = NULL;  
+    uint64_t min_period = 0xFFFFFFFFFFFFFFFF;
+    int i = 0;
+    for (i = 0; i < runnable->size; i++) {
+        rt_thread_sim *thread = runnable->threads[i];
+        if (thread->type == PERIODIC) {
+            if (thread->constraints->periodic.period < min_period) {
+                min_period = thread->constraints->periodic.period;
+                min_thread = thread;
+            }
+        }
+    }
+    
+    for (i = 0; i < pending->size; i++) {
+        rt_thread_sim *thread = pending->threads[i];
+        if (thread->type == PERIODIC) {
+            if (thread->constraints->periodic.period < min_period) {
+                min_period = thread->constraints->periodic.period;
+                min_thread = thread;
+            }
+        }
+    }
+    return min_thread;
+}
+
 static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler) {
     int i;
     simulator->runnable->size = scheduler->runnable->size;
@@ -1272,7 +1335,7 @@ static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler) {
         rt_thread_sim *d = (rt_thread_sim *)malloc(sizeof(rt_thread_sim));
         d->type = s->type;
         d->q_type = s->q_type;
-        d->status = s->status;
+        d->status = ADMITTED;
 
         rt_constraints *constraints = (rt_constraints *)malloc(sizeof(rt_constraints));
         if (d->type == PERIODIC) {
@@ -1283,10 +1346,10 @@ static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler) {
             constraints->sporadic = constr;
         }
         d->constraints = constraints;
-        d->start_time = s->start_time;
-        d->run_time = s->run_time;
-        d->deadline = s->deadline;
-        d->exit_time = s->exit_time;
+        d->start_time = 0;
+        d->run_time = 0;
+        d->deadline = constraints->periodic.period;
+        d->exit_time = 0;
         simulator->runnable->threads[i] = d;
     }
 
@@ -1296,27 +1359,30 @@ static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler) {
         rt_thread_sim *d = (rt_thread_sim *)malloc(sizeof(rt_thread_sim));
         d->type = s->type;
         d->q_type = s->q_type;
-        d->status = s->status;
+        d->status = ADMITTED;
 
         rt_constraints *constraints = (rt_constraints *)malloc(sizeof(rt_constraints));
         struct aperiodic_constraints constr = {(s->constraints->aperiodic.priority)};
         constraints->aperiodic = constr;
 
         d->constraints = constraints;
-        d->start_time = s->start_time;
-        d->run_time = s->run_time;
-        d->deadline = s->deadline;
-        d->exit_time = s->exit_time;
+        d->start_time = 0;
+        d->run_time = 0;
+        d->deadline = 0;
+        d->exit_time = 0;
         simulator->aperiodic->threads[i] = d;
     }
 
-    simulator->pending->size = scheduler->pending->size;
-    for (i = 0; i < simulator->pending->size; i++) {
+    int j = simulator->runnable->size;
+    simulator->runnable->size += scheduler->pending->size;
+    simulator->pending->size = 0;
+
+    for (i = 0; i < simulator->runnable->size; i++) {
         rt_thread *s = scheduler->pending->threads[i];
         rt_thread_sim *d = (rt_thread_sim *)malloc(sizeof(rt_thread_sim));
         d->type = s->type;
         d->q_type = s->q_type;
-        d->status = s->status;
+        d->status = ADMITTED;
 
         rt_constraints *constraints = (rt_constraints *)malloc(sizeof(rt_constraints));
         if (d->type == PERIODIC) {
@@ -1328,11 +1394,12 @@ static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler) {
         }
 
         d->constraints = constraints;
-        d->start_time = s->start_time;
-        d->run_time = s->run_time;
-        d->deadline = s->deadline;
-        d->exit_time = s->exit_time;
-        simulator->pending->threads[i] = d;
+        d->start_time = 0;
+        d->run_time = 0;
+        d->deadline = constraints->periodic.period;
+        d->exit_time = 0;
+
+        simulator->runnable->threads[i + j] = d;
     }
 }
 
@@ -1357,7 +1424,7 @@ static void free_threads_sim(rt_simulator *simulator) {
     simulator->pending->size = 0;
 }
 
-static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_sim *thread, uint64_t time)
+static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_sim *thread, uint64_t time, int *failed)
 {
     rt_thread_sim *next;
     while (simulator->pending->size > 0)
@@ -1381,13 +1448,11 @@ static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_s
             {
                 enqueue_thread_logic(simulator->aperiodic, thread);
                 next = dequeue_thread_logic(simulator->runnable);
-                set_timer_logic(simulator, next, time);
                 return next;
             }
 
             enqueue_thread_logic(simulator->aperiodic, thread);
             next = dequeue_thread_logic(simulator->aperiodic);
-            set_timer_logic(simulator, next, time);
             return next;
 
             break;
@@ -1396,11 +1461,9 @@ static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_s
             if (thread->run_time >= thread->constraints->sporadic.work) {
                 if (simulator->runnable->size > 0) {
                     next = dequeue_thread_logic(simulator->runnable);
-                    set_timer_logic(simulator, next, time);
                     return next;
                 }
                 next = dequeue_thread_logic(simulator->aperiodic);
-                set_timer_logic(simulator, next, time);
                 return next;
             } else {
                 if (simulator->runnable->size > 0)
@@ -1408,7 +1471,6 @@ static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_s
                     if (thread->deadline > simulator->runnable->threads[0]->deadline) {
                         next = dequeue_thread_logic(simulator->runnable);
                         enqueue_thread_logic(simulator->runnable, thread);
-                        set_timer_logic(simulator, next, time);
                         return next;
                     }
                 }
@@ -1424,15 +1486,14 @@ static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_s
                     update_periodic_logic(thread, time);
                     enqueue_thread_logic(simulator->runnable, thread);
                 } else {
+                    *failed = 1;
                     enqueue_thread_logic(simulator->pending, thread);
                 }
                 if (simulator->runnable->size > 0) {
                     next = dequeue_thread_logic(simulator->runnable);
-                    set_timer_logic(simulator, next, time);
                     return next;
                 }
                 next = dequeue_thread_logic(simulator->aperiodic);
-                set_timer_logic(simulator, next, time);
                 return next;
             } else {
                 if (simulator->runnable->size > 0)
@@ -1440,21 +1501,19 @@ static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_s
                     if (thread->deadline > simulator->runnable->threads[0]->deadline) {
                         next = dequeue_thread_logic(simulator->runnable);
                         enqueue_thread_logic(simulator->runnable, thread);
-                        set_timer_logic(simulator, next, time);
                         return next;
                     }
                 }
             }
-            set_timer_logic(simulator, thread, time);
             return thread;
         default:
-            set_timer_logic(simulator, thread, time);
             return thread;
     }    
 }
 
 static inline void update_exit_logic(rt_thread_sim *t, uint64_t time)
 {
+    t->exit_time = time;
     t->run_time += (t->exit_time - t->start_time);
 }
 
