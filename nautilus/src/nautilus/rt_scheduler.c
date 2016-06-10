@@ -1445,15 +1445,15 @@ static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler, r
     sched_per->q_type = RUNNABLE_QUEUE;
     sched_per->status = ADMITTED;
 
-    rt_constraints *constraints = (rt_constraints *)malloc(sizeof(rt_constraints));
+    rt_constraints *sched_con = (rt_constraints *)malloc(sizeof(rt_constraints));
     if (this->type == PERIODIC) {
         struct periodic_constraints constr = {(this->constraints->periodic.period), (this->constraints->periodic.slice)};
-        constraints->periodic = constr;
+        sched_con->periodic = constr;
     } else if (this->type == SPORADIC) {
         struct sporadic_constraints constr = {(this->constraints->sporadic.work)};
-        constraints->sporadic = constr;
+        sched_con->sporadic = constr;
     }
-    sched_per->constraints = constraints;
+    sched_per->constraints = sched_con;
     sched_per->start_time = 0;
     sched_per->run_time = 0;
     sched_per->exit_time = 0;
