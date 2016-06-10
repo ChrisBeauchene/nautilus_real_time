@@ -1218,6 +1218,11 @@ static void sched_sim(void *scheduler) {
                 int admission_check = rt_admit(sched, new);
                 if (admission_check) {
                     copy_threads_sim(sim, sched, new);
+                    int i = 0;
+
+                    for (i = 0; i < sim->runnable->size; i++) { 
+                        printk("DEADLINE %llu\n", sim->runnable->threads[i]->deadline);
+                    }
                     rt_thread_sim *next = min_periodic(sim);
                     rt_thread_sim *max = max_periodic(sim);
                     current_time += (context_time +sched_time);
