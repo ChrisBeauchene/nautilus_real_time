@@ -1182,8 +1182,8 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
     nk_thread_id_t sched;
 
     rt_constraints *c = (rt_constraints *)malloc(sizeof(rt_constraints));
-    struct periodic_constraints per_constr_first = {sched_period, sched_slice_time};
-    c->periodic = per_constr_first;
+    struct periodic_constraints p = {sched_period, sched_slice_time};
+    c->periodic = p;
 
     nk_thread_start_sim((nk_thread_fun_t)sched_sim, NULL, NULL, 0, 0, &sched, my_cpu_id(), PERIODIC, c, 0);
 
