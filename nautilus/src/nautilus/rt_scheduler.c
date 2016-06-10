@@ -1225,9 +1225,10 @@ static void sched_sim(void *scheduler) {
 
                     rt_thread_sim *next = min_periodic(sim);
                     rt_thread_sim *max = max_periodic(sim);
+
                     current_time += (context_time +sched_time);
                     next->deadline += current_time;
-                    
+
                     update_enter_logic(next, current_time);
                     current_time = set_timer_logic(sim, next, current_time);
                     
@@ -1235,7 +1236,7 @@ static void sched_sim(void *scheduler) {
                     while (finished_max <= 1) {
                         update_exit_logic(next, current_time);
                         next = rt_need_resched_logic(sim, next, current_time, &failed);
-                        printk("deadline is %llu\n", next->deadline);
+                        printk("Time is %llu\n", current_time);
                         if (next == max) {
                             finished_max++;
                         }
