@@ -1204,7 +1204,7 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
     nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test3, my_cpu_id(), PERIODIC, c, 0);
     nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test4, my_cpu_id(), PERIODIC, c, 0);
     nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test5, my_cpu_id(), PERIODIC, c, 0);
-    nk_join(test0, NULL);
+  
     printk("Joined test thread.\n");
 
 }
@@ -1268,10 +1268,6 @@ static void sched_sim(void *scheduler) {
                         if (failed) break;
 
                         current_time += (context_time + sched_time);
-
-                        if (next->start_time == 0) {
-                            next->deadline += current_time;
-                        }
 
                         update_enter_logic(next, current_time);
                         current_time += set_timer_logic(sim, next, current_time);
