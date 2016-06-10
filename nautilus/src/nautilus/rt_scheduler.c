@@ -1220,9 +1220,6 @@ static void sched_sim(void *scheduler) {
                     copy_threads_sim(sim, sched, new);
                     int i = 0;
 
-                    for (i = 0; i < sim->runnable->size; i++) { 
-                        printk("DEADLINE %llu\n", sim->runnable->threads[i]->deadline);
-                    }
                     rt_thread_sim *next = min_periodic(sim);
                     rt_thread_sim *max = max_periodic(sim);
                     current_time += (context_time +sched_time);
@@ -1384,7 +1381,7 @@ static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler, r
     simulator->runnable->size += scheduler->pending->size;
     simulator->pending->size = 0;
 
-    for (i = 0; i < simulator->runnable->size; i++) {
+    for (i = j; i < simulator->runnable->size; i++) {
         rt_thread *s = scheduler->pending->threads[i];
         rt_thread_sim *d = (rt_thread_sim *)malloc(sizeof(rt_thread_sim));
         d->type = s->type;
@@ -1411,7 +1408,7 @@ static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler, r
         
         d->exit_time = 0;
 
-        simulator->runnable->threads[i + j] = d;
+        simulator->runnable->threads[i] = d;
     }
 
     rt_thread_sim *new_sim = (rt_thread_sim *)malloc(sizeof(rt_thread_sim *));
