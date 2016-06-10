@@ -1288,7 +1288,7 @@ static void sched_sim(void *scheduler) {
                     update_enter_logic(next, current_time);
                     current_time += set_timer_logic(sim, next, current_time);
                     
-
+                    printk("APERIODIC SIZE IS %d\n", sim->aperiodic->size);
                     while (finished_max <= 1) {
                         update_exit_logic(next, current_time);
                         next = rt_need_resched_logic(sim, next, current_time, &failed, &finished_max, max);
