@@ -1179,6 +1179,8 @@ static void test_real_time(void *in)
 
 void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
 
+    nk_thread_id_t sched;
+
     rt_constraints *constraints_first = (rt_constraints *)malloc(sizeof(rt_constraints));
     struct periodic_constraints per_constr_first = {sched_period, sched_slice_time};
     constraints_first->periodic = per_constr_first;
@@ -1195,7 +1197,6 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
     nk_thread_id_t w;
     nk_thread_id_t x;
     nk_thread_id_t y;
-    
     
     
     rt_constraints *constraints_first = (rt_constraints *)malloc(sizeof(rt_constraints));
