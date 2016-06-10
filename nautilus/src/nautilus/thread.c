@@ -912,7 +912,7 @@ out:
 #else
 {
     nk_thread_t *thethread = (nk_thread_t *)t;
-    if (thethread->statues == NK_THR_EXITED) {
+    if (thethread->status == NK_THR_EXITED) {
         if (thethread->output) {
             *retval = thethread->output;
         }
@@ -927,6 +927,7 @@ out:
     }
 out:
     thread_detach(thethread);
+    return 0;
 }
 #endif
 
@@ -991,6 +992,7 @@ nk_join_all_children (int (*func)(void * res))
             }
         }
     } 
+    #endif
     
     return ret;
 }
@@ -1133,6 +1135,7 @@ int sleep_on_queue(rt_thread *sleep) {
     list_enqueue(sched->sleeping, t->rt_thread);
     wait_on(t->rt_thread, sleep);
     nk_schedule();
+    return 0;
 }
 #endif
 
