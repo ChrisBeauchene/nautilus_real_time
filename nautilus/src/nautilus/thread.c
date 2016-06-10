@@ -1674,7 +1674,6 @@ nk_sched_init_ap (void)
     // set my current thread
 #ifdef NAUT_CONFIG_USE_RT_SCHEDULER
     my_cpu->rt_sched = rt_scheduler_init(rt_thread_init(APERIODIC, NULL, 0, me));
-    enqueue_thread(my_cpu->rt_sched->aperiodic, my_cpu->rt_sched->main_thread);
 #endif
     
     put_cur_thread(me);

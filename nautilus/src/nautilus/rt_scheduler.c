@@ -320,6 +320,7 @@ rt_scheduler* rt_scheduler_init(rt_thread *main_thread)
         scheduler->tsc = info;
 
     }
+    enqueue_thread(scheduler->aperiodic, main_thread);
     return scheduler;
 }
 
