@@ -1033,6 +1033,7 @@ nk_wait (nk_thread_id_t t)
     nk_thread_t * cur = get_cur_thread();
     rt_thread *rt = cur->rt_thread;
     sleep_on_queue(rt);
+    nk_schedule();
 }
 #endif
 
