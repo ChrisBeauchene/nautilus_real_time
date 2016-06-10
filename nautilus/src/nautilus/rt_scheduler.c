@@ -1336,8 +1336,8 @@ static rt_thread_sim* min_periodic(rt_simulator *simulator) {
 
 static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler, rt_thread *new) {
     int i;
-    simulator->runnable->size = scheduler->runnable->size;
-    for (i = 0; i < simulator->runnable->size; i++) {
+
+    for (i = 0; i < scheduler->runnable->size; i++) {
         rt_thread *s = scheduler->runnable->threads[i];
         rt_thread_sim *d = (rt_thread_sim *)malloc(sizeof(rt_thread_sim));
         d->type = s->type;
@@ -1357,10 +1357,9 @@ static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler, r
         d->run_time = 0;
         d->deadline = constraints->periodic.period;
         d->exit_time = 0;
-        simulator->runnable->threads[i] = d;
+        enqueue_thread_logic(simulator->runnable, d);
     }
 
-    simulator->aperiodic->size = scheduler->aperiodic->size;
     for (i = 0; i < simulator->aperiodic->size; i++) {
         rt_thread *s = scheduler->aperiodic->threads[i];
         rt_thread_sim *d = (rt_thread_sim *)malloc(sizeof(rt_thread_sim));
@@ -1377,14 +1376,11 @@ static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler, r
         d->run_time = 0;
         d->deadline = 0;
         d->exit_time = 0;
-        simulator->aperiodic->threads[i] = d;
+        enqueue_thread_logic(simulator->aperiodic, d);
     }
 
-    int j = simulator->runnable->size;
-    simulator->runnable->size += scheduler->pending->size;
-    simulator->pending->size = 0;
 
-    for (i = j; i < simulator->runnable->size; i++) {
+    for (i = 0; i < scheduer->pending->size; i++) {
         rt_thread *s = scheduler->pending->threads[i];
         rt_thread_sim *d = (rt_thread_sim *)malloc(sizeof(rt_thread_sim));
         d->type = s->type;
@@ -1411,7 +1407,7 @@ static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler, r
         
         d->exit_time = 0;
 
-        simulator->runnable->threads[i] = d;
+        enqueue_thread_logic(simulator->runnable, d);
     }
 
     rt_thread_sim *new_sim = (rt_thread_sim *)malloc(sizeof(rt_thread_sim *));
@@ -1439,8 +1435,7 @@ static void copy_threads_sim(rt_simulator *simulator, rt_scheduler *scheduler, r
         new_sim->deadline = constraints->sporadic.work;
     }
 
-    int pos = simulator->runnable->size++;
-    simulator->runnable->threads[pos] = new_sim;
+    enqueue_thread_logic(simulator->runnable, d);
 }
 
 static void free_threads_sim(rt_simulator *simulator) {
