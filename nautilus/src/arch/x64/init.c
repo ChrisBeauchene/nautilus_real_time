@@ -331,7 +331,7 @@ init (unsigned long mbd,
     
 
     while (1) {
-        udelay(100000);
+        udelay(10000);
         printk("Inside init\n");
     }
 
