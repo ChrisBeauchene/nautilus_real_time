@@ -1174,15 +1174,17 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
     c->periodic = p;
 
     nk_thread_start_sim((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test, my_cpu_id(), PERIODIC, c, 0);
+    nk_join(test, NULL);
 
 }
 
 static int test_sum(void) {
-    const int size = 100000;
+    const int size = 1000000;
     int sum = 0, i = 0;
 
     for (i = 0; i < size; i++) {
         sum += i;
+        printk("Sum is %d\n", sum);
     }
 
     return sum;
