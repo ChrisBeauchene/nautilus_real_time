@@ -1163,7 +1163,12 @@ static void test_real_time(void *in)
 
 void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
     nk_thread_id_t sched;
-    nk_thread_id_t test;
+    nk_thread_id_t test0;
+    nk_thread_id_t test1;
+    nk_thread_id_t test2;
+    nk_thread_id_t test3;
+    nk_thread_id_t test4;
+    nk_thread_id_t test5;
 
     rt_constraints *constraints_first = (rt_constraints *)malloc(sizeof(rt_constraints));
     struct periodic_constraints per_constr_first = {sched_period, sched_slice_time};
@@ -1176,7 +1181,12 @@ void rt_start(uint64_t sched_slice_time, uint64_t sched_period) {
     c->periodic = p;
 
     printk("Starting thread.\n");
-    nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test, my_cpu_id(), PERIODIC, c, 0);
+    nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test0, my_cpu_id(), PERIODIC, c, 0);
+    nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test1, my_cpu_id(), PERIODIC, c, 0);
+    nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test2, my_cpu_id(), PERIODIC, c, 0);
+    nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test3, my_cpu_id(), PERIODIC, c, 0);
+    nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test4, my_cpu_id(), PERIODIC, c, 0);
+    nk_thread_start((nk_thread_fun_t)test_sum, NULL, NULL, 0, 0, &test5, my_cpu_id(), PERIODIC, c, 0);
     // nk_join(test, NULL);
     printk("Joined test thread.\n");
 
@@ -1186,7 +1196,6 @@ static int test_sum(void) {
     const int size = 100;
     int sum = 0, i = 0;
 
-    udelay(1000);
     for (i = 0; i < size; i++) {
         sum += i;
         udelay(1000);
@@ -1224,10 +1233,6 @@ static void sched_sim(void *scheduler) {
                     nk_thread_t *me = get_cur_thread();
                     rt_thread *this = me->rt_thread;
                     copy_threads_sim(sim, sched, new, this);
-                    int i = 0;
-                    for (i = 0; i < sim->runnable->size; i++) {
-                        printk("Runnable deadline %d is %llu\n", i, sim->runnable->threads[i]->deadline);
-                    }
 
                     rt_thread_sim *next = min_periodic(sim);
                     rt_thread_sim *max = max_periodic(sim);
@@ -1250,7 +1255,7 @@ static void sched_sim(void *scheduler) {
                         if (next->start_time == 0) {
                             next->deadline += current_time;
                         }
-                        
+
                         update_enter_logic(next, current_time);
                         current_time += set_timer_logic(sim, next, current_time);
                     }
@@ -1552,7 +1557,6 @@ static rt_thread_sim* rt_need_resched_logic(rt_simulator *simulator, rt_thread_s
                 }
             }
 
-            set_timer_logic(simulator, thread, time);
             return thread;
             break;
             
